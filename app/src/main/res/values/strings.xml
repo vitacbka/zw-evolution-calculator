@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Evo Calc</string>
+    <string name="select_day">Выберите день эволюции</string>
+    <string name="calculate">Рассчитать</string>
+    <string name="result">Результат</string>
+    <string name="footer_text">Поддержать разработчика</string>
+    <string name="yoomoney_link">https://yoomoney.ru/to/41001957756369/0</string>
+    <string name="sber_link">https://www.sberbank.ru/ru/choise_bank?requisiteNumber=79217884626&amp;bankCode=100000000111</string>
+    <string name="in_development">⚠️ В разработке...</string>
+    <string name="donate_title">Выберите способ перевода</string>
+
+    <string-array name="days_array">
+        <item>День 1 — Энергия</item>
+        <item>День 2 — Экипировка</item>
+        <item>День 3 — Лагерь</item>
+        <item>День 4 — Чертежи</item>
+        <item>День 5 — Невролинк</item>
+        <item>День 6 — Оружие/Акс.</item>
+        <item>День 7 — Пополнение</item>
+    </string-array>
+</resources>

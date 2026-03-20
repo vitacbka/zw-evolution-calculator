@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Kanagawa" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/kanagawa_bg</item>
+        <item name="android:navigationBarColor">@color/kanagawa_bg</item>
+        <item name="android:windowBackground">@color/kanagawa_bg</item>
+        <item name="android:colorBackground">@color/kanagawa_bg</item>
+        <item name="backgroundColor">@color/kanagawa_bg</item>
+        <item name="colorPrimary">@color/kanagawa_accent</item>
+        <item name="colorPrimaryVariant">@color/kanagawa_accent_variant</item>
+        <item name="colorOnPrimary">@color/kanagawa_text</item>
+        <item name="colorSecondary">@color/kanagawa_green</item>
+        <item name="colorOnSecondary">@color/kanagawa_bg</item>
+        <item name="android:textColorPrimary">@color/kanagawa_text</item>
+        <item name="android:textColorSecondary">@color/kanagawa_text_dim</item>
+    </style>
+
+    <style name="SpinnerStyle" parent="Widget.AppCompat.Spinner">
+        <item name="android:textColor">@color/kanagawa_text</item>
+        <item name="android:textColorPrimary">@color/kanagawa_text</item>
+        <item name="android:textColorSecondary">@color/kanagawa_text</item>
+        <item name="android:popupBackground">@color/kanagawa_surface</item>
+    </style>
+</resources>
