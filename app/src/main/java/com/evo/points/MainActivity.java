@@ -7,14 +7,23 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.evo.points.adapter.RewardAdapter;
+import com.evo.points.calculator.EvoCalculatorCore;
+import com.evo.points.model.Reward;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,11 +32,30 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton calculateButton;
     private MaterialCardView resultCard;
     private TextView resultText;
-    private TextView rewardsText;
+    
+    // Аккордеон 1: обычные награды
+    private MaterialCardView rewardsAccordionCard;
+    private LinearLayout rewardsAccordionHeader;
+    private LinearLayout rewardsAccordionContent;
+    private ImageView rewardsAccordionIcon;
+    private TextView pointsText;
+    private TextView day6ProbabilitiesText;
+    private RecyclerView rewardsRecyclerView;
+    private RewardAdapter rewardAdapter;
+    
+    // Аккордеон 2: топ награда
+    private MaterialCardView topRewardAccordionCard;
+    private LinearLayout topRewardAccordionHeader;
+    private LinearLayout topRewardAccordionContent;
+    private ImageView topRewardAccordionIcon;
+    private ImageView topRewardImage;
+    
     private MaterialButton donateYoomoneyButton;
     private MaterialButton donateSberButton;
 
     private int selectedDay = 0;
+    private boolean isRewardsAccordionExpanded = false;
+    private boolean isTopRewardAccordionExpanded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +67,36 @@ public class MainActivity extends AppCompatActivity {
         calculateButton = findViewById(R.id.calculateButton);
         resultCard = findViewById(R.id.resultCard);
         resultText = findViewById(R.id.resultText);
-        rewardsText = findViewById(R.id.rewardsText);
+        
+        // Аккордеон 1
+        rewardsAccordionCard = findViewById(R.id.rewardsAccordionCard);
+        rewardsAccordionHeader = findViewById(R.id.rewardsAccordionHeader);
+        rewardsAccordionContent = findViewById(R.id.rewardsAccordionContent);
+        rewardsAccordionIcon = findViewById(R.id.rewardsAccordionIcon);
+        pointsText = findViewById(R.id.pointsText);
+        day6ProbabilitiesText = findViewById(R.id.day6ProbabilitiesText);
+        rewardsRecyclerView = findViewById(R.id.rewardsRecyclerView);
+        
+        // Аккордеон 2
+        topRewardAccordionCard = findViewById(R.id.topRewardAccordionCard);
+        topRewardAccordionHeader = findViewById(R.id.topRewardAccordionHeader);
+        topRewardAccordionContent = findViewById(R.id.topRewardAccordionContent);
+        topRewardAccordionIcon = findViewById(R.id.topRewardAccordionIcon);
+        topRewardImage = findViewById(R.id.topRewardImage);
+        
         donateYoomoneyButton = findViewById(R.id.donateYoomoneyButton);
         donateSberButton = findViewById(R.id.donateSberButton);
+
+        // Настройка RecyclerView для наград
+        rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        rewardAdapter = new RewardAdapter(this);
+        rewardsRecyclerView.setAdapter(rewardAdapter);
+
+        // Обработчик клика на аккордеон 1
+        rewardsAccordionHeader.setOnClickListener(v -> toggleRewardsAccordion());
+
+        // Обработчик клика на аккордеон 2
+        topRewardAccordionHeader.setOnClickListener(v -> toggleTopRewardAccordion());
 
         // Настройка Spinner
         ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(this,
@@ -96,9 +151,30 @@ public class MainActivity extends AppCompatActivity {
         createInputFields();
     }
 
+    private void toggleRewardsAccordion() {
+        isRewardsAccordionExpanded = !isRewardsAccordionExpanded;
+        rewardsAccordionContent.setVisibility(isRewardsAccordionExpanded ? View.VISIBLE : View.GONE);
+        rewardsAccordionIcon.setImageResource(isRewardsAccordionExpanded ? R.drawable.ic_expand_less : R.drawable.ic_expand_more);
+    }
+
+    private void toggleTopRewardAccordion() {
+        isTopRewardAccordionExpanded = !isTopRewardAccordionExpanded;
+        topRewardAccordionContent.setVisibility(isTopRewardAccordionExpanded ? View.VISIBLE : View.GONE);
+        topRewardAccordionIcon.setImageResource(isTopRewardAccordionExpanded ? R.drawable.ic_expand_less : R.drawable.ic_expand_more);
+    }
+
     private void createInputFields() {
         inputContainer.removeAllViews();
-        resultCard.setVisibility(View.GONE);
+        
+        // Сброс аккордеонов
+        rewardsAccordionCard.setVisibility(View.GONE);
+        topRewardAccordionCard.setVisibility(View.GONE);
+        isRewardsAccordionExpanded = false;
+        isTopRewardAccordionExpanded = false;
+        rewardsAccordionContent.setVisibility(View.GONE);
+        topRewardAccordionContent.setVisibility(View.GONE);
+        rewardsAccordionIcon.setImageResource(R.drawable.ic_expand_more);
+        topRewardAccordionIcon.setImageResource(R.drawable.ic_expand_more);
 
         String[] inputs = getInputsForDay(selectedDay);
         String[] hints = getHintsForDay(selectedDay);
@@ -111,13 +187,13 @@ public class MainActivity extends AppCompatActivity {
             editText.setTextColor(getResources().getColor(R.color.kanagawa_text, null));
             editText.setHintTextColor(getResources().getColor(R.color.kanagawa_text_dim, null));
             editText.setBackgroundTintList(getResources().getColorStateList(R.color.kanagawa_accent, null));
-            
+
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(0, 0, 0, 12);
             editText.setLayoutParams(params);
-            
+
             inputContainer.addView(editText);
         }
     }
@@ -179,60 +255,155 @@ public class MainActivity extends AppCompatActivity {
     private void calculatePoints() {
         int totalPoints = 0;
         StringBuilder result = new StringBuilder();
-        StringBuilder rewards = new StringBuilder();
+        List<Reward> normalRewards = new ArrayList<>();
+        Reward topReward = null;
+        int greenBoxes = 0;
+        int blueBoxes = 0;
 
         switch (selectedDay) {
             case 0: // День 1
                 totalPoints = calculateDay1();
                 result.append("День 1 (Энергия): ").append(totalPoints).append(" очков");
-                rewards.append(getDay1Rewards(totalPoints));
+                normalRewards = getNormalRewards(EvoCalculatorCore.getDay1Rewards(totalPoints));
+                topReward = getTopReward(EvoCalculatorCore.getDay1Rewards(totalPoints));
                 break;
             case 1: // День 2
                 totalPoints = calculateDay2();
                 result.append("День 2 (Экипировка): ").append(totalPoints).append(" очков");
-                rewards.append(getDay2Rewards(totalPoints));
+                normalRewards = getNormalRewards(EvoCalculatorCore.getDay2Rewards(totalPoints));
+                topReward = getTopReward(EvoCalculatorCore.getDay2Rewards(totalPoints));
                 break;
             case 2: // День 3
                 totalPoints = calculateDay3();
                 result.append("День 3 (Лагерь): ").append(totalPoints).append(" очков");
-                rewards.append(getDay3Rewards(totalPoints));
+                normalRewards = getNormalRewards(EvoCalculatorCore.getDay3Rewards(totalPoints));
+                topReward = getTopReward(EvoCalculatorCore.getDay3Rewards(totalPoints));
                 break;
             case 3: // День 4
                 totalPoints = calculateDay4();
                 result.append("День 4 (Чертежи): ").append(totalPoints).append(" очков");
-                rewards.append(getDay4Rewards(totalPoints));
+                normalRewards = getNormalRewards(EvoCalculatorCore.getDay4Rewards(totalPoints));
+                topReward = getTopReward(EvoCalculatorCore.getDay4Rewards(totalPoints));
                 break;
             case 4: // День 5
                 totalPoints = calculateDay5();
                 result.append("День 5 (Невролинк): ").append(totalPoints).append(" очков");
-                rewards.append(getDay5Rewards(totalPoints));
+                normalRewards = getNormalRewards(EvoCalculatorCore.getDay5Rewards(totalPoints));
+                topReward = getTopReward(EvoCalculatorCore.getDay5Rewards(totalPoints));
                 break;
             case 5: // День 6
                 totalPoints = calculateDay6();
                 result.append("День 6 (Оружие/Акс.): ").append(totalPoints).append(" очков");
-                rewards.append(getDay6Rewards(totalPoints));
-                rewards.append("\n\n").append(getDay6BoxProbabilities(
-                    getValue(inputContainer.getChildAt(1).getId()),
-                    getValue(inputContainer.getChildAt(2).getId())
-                ));
+                greenBoxes = getValue(inputContainer.getChildAt(1).getId());
+                blueBoxes = getValue(inputContainer.getChildAt(2).getId());
+                normalRewards = getNormalRewards(EvoCalculatorCore.getDay6Rewards(totalPoints));
+                topReward = getTopReward(EvoCalculatorCore.getDay6Rewards(totalPoints));
                 break;
             case 6: // День 7
                 totalPoints = calculateDay7();
                 result.append("День 7 (Пополнение): ").append(totalPoints).append(" очков");
-                rewards.append("Награды для дня 7 не предусмотрены");
+                topReward = getTopReward(EvoCalculatorCore.getDay7Rewards(totalPoints));
                 break;
         }
 
         resultText.setText(result.toString());
-        
-        if (rewards.length() > 0) {
-            rewardsText.setText("🎁 НАГРАДЫ:\n" + rewards);
-            rewardsText.setVisibility(View.VISIBLE);
+
+        // Обновляем количество очков
+        pointsText.setText("Количество очков: " + totalPoints);
+
+        // Показываем вероятности для Дня 6
+        if (selectedDay == 5) { // День 6
+            String probabilities = getDay6ProbabilitiesText(greenBoxes, blueBoxes);
+            day6ProbabilitiesText.setText(probabilities);
+            day6ProbabilitiesText.setVisibility(View.VISIBLE);
         } else {
-            rewardsText.setVisibility(View.GONE);
+            day6ProbabilitiesText.setVisibility(View.GONE);
+        }
+
+        // Отображение аккордеона с обычными наградами
+        if (normalRewards != null && !normalRewards.isEmpty()) {
+            rewardAdapter.setRewards(normalRewards);
+            rewardsAccordionCard.setVisibility(View.VISIBLE);
+        } else {
+            rewardsAccordionCard.setVisibility(View.GONE);
+        }
+
+        // Отображение аккордеона с топ наградой (всегда показывается для дней 1-6, для дня 7 только топ)
+        if (topReward != null && topReward.hasScreenshot()) {
+            String topPath = topReward.getScreenshotPath();
+            
+            // Загружаем из assets
+            try {
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(
+                    getAssets().open(topPath)
+                );
+                topRewardImage.setImageBitmap(bitmap);
+                topRewardAccordionCard.setVisibility(View.VISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                topRewardAccordionCard.setVisibility(View.GONE);
+            }
         }
 
         resultCard.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Текст с вероятностями для Дня 6
+     */
+    private String getDay6ProbabilitiesText(int greenBoxes, int blueBoxes) {
+        double expectedBlueFromGreen = greenBoxes * 0.05;
+        double expectedVioletFromBlue = blueBoxes * 0.04;
+
+        int minBlue = (int) Math.floor(expectedBlueFromGreen * 0.5);
+        int maxBlue = (int) Math.ceil(expectedBlueFromGreen * 1.5);
+        int minViolet = (int) Math.floor(expectedVioletFromBlue * 0.5);
+        int maxViolet = (int) Math.ceil(expectedVioletFromBlue * 1.5);
+
+        int blueCount = (int) Math.round(expectedBlueFromGreen);
+        int violetCount = (int) Math.round(expectedVioletFromBlue);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("🎲 ДОПОЛНИТЕЛЬНО ВЫ МОЖЕТЕ ПОЛУЧИТЬ ПРИ ОТКРЫТИИ СУНДУКОВ:\n");
+        sb.append("Приблизительный расчёт (ожидаемое количество, диапазон с учётом случайности):\n");
+        sb.append("  🔵 Синих сундуков из зелёных (5%): ~").append(blueCount)
+          .append(" (от ").append(minBlue).append(" до ").append(maxBlue).append(")\n");
+        sb.append("  🟣 Фиолетовых сундуков из синих (4%): ~").append(violetCount)
+          .append(" (от ").append(minViolet).append(" до ").append(maxViolet).append(")\n");
+
+        int potentialPoints = blueCount * 30 + violetCount * 250;
+        int minPotentialPoints = minBlue * 30 + minViolet * 250;
+        int maxPotentialPoints = maxBlue * 30 + maxViolet * 250;
+
+        sb.append("\n💎 Потенциально дополнительных очков: ~").append(potentialPoints)
+          .append(" (от ").append(minPotentialPoints).append(" до ").append(maxPotentialPoints).append(")");
+
+        return sb.toString();
+    }
+
+    /**
+     * Фильтрует обычные награды (не топ)
+     */
+    private List<Reward> getNormalRewards(List<Reward> allRewards) {
+        List<Reward> normal = new ArrayList<>();
+        for (Reward r : allRewards) {
+            if (!r.isTopReward()) {
+                normal.add(r);
+            }
+        }
+        return normal;
+    }
+
+    /**
+     * Находит топ награду
+     */
+    private Reward getTopReward(List<Reward> allRewards) {
+        for (Reward r : allRewards) {
+            if (r.isTopReward()) {
+                return r;
+            }
+        }
+        return null;
     }
 
     private int calculateDay1() {
@@ -285,221 +456,5 @@ public class MainActivity extends AppCompatActivity {
     private int calculateDay7() {
         int donate = getValue(inputContainer.getChildAt(0).getId());
         return donate * 6;
-    }
-
-    private String getDay1Rewards(int points) {
-        StringBuilder sb = new StringBuilder();
-        boolean hasReward = false;
-
-        if (points >= 69000) {
-            sb.append("✓ 1 тессеракт\n✓ 10 ваучеров для розыгрыша снаряжения\n✓ 30 чипов\n");
-            hasReward = true;
-        }
-        if (points >= 36000) {
-            sb.append("✓ 10 ваучеров для розыгрыша снаряжения\n✓ 20 чипов\n");
-            hasReward = true;
-        }
-        if (points >= 20000) {
-            sb.append("✓ 1 тессеракт\n✓ 15 чипов\n");
-            hasReward = true;
-        }
-        if (points >= 9000) {
-            sb.append("✓ 10 ваучеров оружейных материалов\n✓ 10 чипов\n");
-            hasReward = true;
-        }
-        if (points >= 3000) {
-            sb.append("✓ 100 алмазов\n✓ 5 чипов\n");
-            hasReward = true;
-        }
-
-        if (!hasReward) {
-            sb.append("Недостаточно очков (мин. 3000)");
-        }
-        return sb.toString();
-    }
-
-    private String getDay2Rewards(int points) {
-        StringBuilder sb = new StringBuilder();
-        boolean hasReward = false;
-
-        if (points >= 68000) {
-            sb.append("✓ 1 сундук снаряжения S\n✓ 2 ящика ресурсов лагеря\n");
-            hasReward = true;
-        }
-        if (points >= 48000) {
-            sb.append("✓ 1 эпическое снаряжение S\n✓ 1 ящик ресурсов лагеря\n");
-            hasReward = true;
-        }
-        if (points >= 30000) {
-            sb.append("✓ 1 обменник снаряжения\n✓ 1 ящик ресурсов лагеря\n");
-            hasReward = true;
-        }
-        if (points >= 15000) {
-            sb.append("✓ 1 сундук снаряжения на выбор (эпический)\n✓ 2 тоника силы\n");
-            hasReward = true;
-        }
-        if (points >= 6000) {
-            sb.append("✓ 100 алмазов\n✓ 1 тоник силы\n");
-            hasReward = true;
-        }
-
-        if (!hasReward) {
-            sb.append("Недостаточно очков (мин. 6000)");
-        }
-        return sb.toString();
-    }
-
-    private String getDay3Rewards(int points) {
-        StringBuilder sb = new StringBuilder();
-        boolean hasReward = false;
-
-        if (points >= 74000) {
-            sb.append("✓ 1 случайный сундук украшений (легендарный)\n✓ 1 техноядро (бой)\n✓ 100 ваучеров модуля\n");
-            hasReward = true;
-        }
-        if (points >= 45000) {
-            sb.append("✓ 1 случайный сундук украшений (эпический)\n✓ 1 техноядро (развитие)\n✓ 80 ваучеров модуля\n");
-            hasReward = true;
-        }
-        if (points >= 30000) {
-            sb.append("✓ 1 случайный сундук украшений (эпический)\n✓ 60 ваучеров модуля\n");
-            hasReward = true;
-        }
-        if (points >= 17000) {
-            sb.append("✓ 1 техноядро (бой)\n✓ 1 техноядро (развитие)\n✓ 2 ящика ресурсов лагеря\n");
-            hasReward = true;
-        }
-        if (points >= 6000) {
-            sb.append("✓ 100 алмазов\n✓ 1 тоник силы\n");
-            hasReward = true;
-        }
-
-        if (!hasReward) {
-            sb.append("Недостаточно очков (мин. 6000)");
-        }
-        return sb.toString();
-    }
-
-    private String getDay4Rewards(int points) {
-        StringBuilder sb = new StringBuilder();
-        boolean hasReward = false;
-
-        if (points >= 88000) {
-            sb.append("✓ 1 Модуль VI лвл\n✓ 1 обменник модулей VI лвл\n✓ 80 ящиков материалов нейросвязи\n");
-            hasReward = true;
-        }
-        if (points >= 56000) {
-            sb.append("✓ 1 обменник модулей VI лвл\n✓ 1 Модуль V лвл\n✓ 60 ящиков материалов нейросвязи\n");
-            hasReward = true;
-        }
-        if (points >= 30000) {
-            sb.append("✓ 1 Модуль V лвл\n✓ 40 ящиков материалов нейросвязи\n");
-            hasReward = true;
-        }
-        if (points >= 15000) {
-            sb.append("✓ 1 продвинутый модуль\n✓ 36 ваучеров модуля\n");
-            hasReward = true;
-        }
-        if (points >= 6000) {
-            sb.append("✓ 100 алмазов\n✓ 1 тоник силы\n✓ 10 ваучеров модуля\n");
-            hasReward = true;
-        }
-
-        if (!hasReward) {
-            sb.append("Недостаточно очков (мин. 6000)");
-        }
-        return sb.toString();
-    }
-
-    private String getDay5Rewards(int points) {
-        StringBuilder sb = new StringBuilder();
-        boolean hasReward = false;
-
-        if (points >= 72000) {
-            sb.append("✓ 1 Легендарный кристалл S\n✓ 1 Сундук нейросвязи на выбор\n✓ 10 Ящик припасов с аксами (изысканный)\n");
-            hasReward = true;
-        }
-        if (points >= 48000) {
-            sb.append("✓ 1 Сундук нейросвязи на выбор\n✓ 10 Ящик припасов с аксами (изысканный)\n");
-            hasReward = true;
-        }
-        if (points >= 25000) {
-            sb.append("✓ 1 кортикальный имплант\n✓ 5 Ящик припасов с аксами (изысканный)\n✓ 30 ящиков с материалами нейросвязи на выбор\n");
-            hasReward = true;
-        }
-        if (points >= 10000) {
-            sb.append("✓ 30 ящиков с материалами нейросвязи на выбор\n✓ 30 нейрокодировщиков\n✓ 30 чип синаптического усиления\n");
-            hasReward = true;
-        }
-        if (points >= 5000) {
-            sb.append("✓ 100 алмазов\n✓ 20 нейрокодировщиков\n✓ 20 чип синаптического усиления\n");
-            hasReward = true;
-        }
-
-        if (!hasReward) {
-            sb.append("Недостаточно очков (мин. 5000)");
-        }
-        return sb.toString();
-    }
-
-    private String getDay6Rewards(int points) {
-        StringBuilder sb = new StringBuilder();
-        boolean hasReward = false;
-
-        if (points >= 115000) {
-            sb.append("✓ 2 Ящик припасов (легендарный)\n✓ 1 тессеракт\n✓ 4 Блок антиматерии\n✓ 200 Точный компонент\n");
-            hasReward = true;
-        }
-        if (points >= 75000) {
-            sb.append("✓ 1 Ящик с аксами S\n✓ 2 Блок антиматерии\n✓ 160 Точный компонент\n");
-            hasReward = true;
-        }
-        if (points >= 45000) {
-            sb.append("✓ 2 Блок антиматерии\n✓ 10 Ящик припасов (изысканный)\n✓ 120 Точный компонент\n");
-            hasReward = true;
-        }
-        if (points >= 20000) {
-            sb.append("✓ 1 Блок антиматерии\n✓ 10 Ящик припасов (изысканный)\n✓ 100 Точный компонент\n");
-            hasReward = true;
-        }
-        if (points >= 7500) {
-            sb.append("✓ 1 Блок антиматерии\n✓ 10 Ящик припасов (продвинутый)\n✓ 100 Точный компонент\n");
-            hasReward = true;
-        }
-
-        if (!hasReward) {
-            sb.append("Недостаточно очков (мин. 7500)");
-        }
-        return sb.toString();
-    }
-
-    private String getDay6BoxProbabilities(int greenBoxes, int blueBoxes) {
-        double expectedBlueFromGreen = greenBoxes * 0.05;
-        double expectedVioletFromBlue = blueBoxes * 0.04;
-
-        int minBlue = (int) Math.floor(expectedBlueFromGreen * 0.5);
-        int maxBlue = (int) Math.ceil(expectedBlueFromGreen * 1.5);
-        int minViolet = (int) Math.floor(expectedVioletFromBlue * 0.5);
-        int maxViolet = (int) Math.ceil(expectedVioletFromBlue * 1.5);
-
-        int blueCount = (int) Math.round(expectedBlueFromGreen);
-        int violetCount = (int) Math.round(expectedVioletFromBlue);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n🎲 ДОПОЛНИТЕЛЬНО ВЫ МОЖЕТЕ ПОЛУЧИТЬ ПРИ ОТКРЫТИИ СУНДУКОВ:\n");
-        sb.append("Приблизительный расчёт (ожидаемое количество, диапазон с учётом случайности):\n");
-        sb.append("  🔵 Синих сундуков из зелёных (5%): ~").append(blueCount)
-          .append(" (от ").append(minBlue).append(" до ").append(maxBlue).append(")\n");
-        sb.append("  🟣 Фиолетовых сундуков из синих (4%): ~").append(violetCount)
-          .append(" (от ").append(minViolet).append(" до ").append(maxViolet).append(")\n");
-
-        int potentialPoints = blueCount * 30 + violetCount * 250;
-        int minPotentialPoints = minBlue * 30 + minViolet * 250;
-        int maxPotentialPoints = maxBlue * 30 + maxViolet * 250;
-
-        sb.append("\n💎 Потенциально дополнительных очков: ~").append(potentialPoints)
-          .append(" (от ").append(minPotentialPoints).append(" до ").append(maxPotentialPoints).append(")");
-
-        return sb.toString();
     }
 }

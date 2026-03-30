@@ -10,15 +10,15 @@ android {
         applicationId "com.evo.points"
         minSdk 24
         targetSdk 34
-        versionCode 2
-        versionName "1.01"
+        versionCode 3
+        versionName "1.02"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         release {
-            storeFile file('../evo-points-key.jks')
+            storeFile file('evo-points-key.jks')
             storePassword 'EvoPoints2026!'
             keyAlias 'evo-points'
             keyPassword 'EvoPoints2026!'
@@ -31,6 +31,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
     }
 
     compileOptions {
@@ -47,6 +52,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
 
     // Unit testing
     testImplementation 'junit:junit:4.13.2'

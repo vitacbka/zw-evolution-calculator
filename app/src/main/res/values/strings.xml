@@ -9,6 +9,9 @@
     <string name="sber_link">https://www.sberbank.ru/ru/choise_bank?requisiteNumber=79217884626&amp;bankCode=100000000111</string>
     <string name="in_development">⚠️ В разработке...</string>
     <string name="donate_title">Выберите способ перевода</string>
+    <string name="reward_icon_description">Иконка награды</string>
+    <string name="rewards_title">🎁 Награды</string>
+    <string name="no_rewards">Недостаточно очков для получения наград</string>
 
     <string-array name="days_array">
         <item>День 1 — Энергия</item>
