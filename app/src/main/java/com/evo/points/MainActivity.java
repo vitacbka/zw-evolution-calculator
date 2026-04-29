@@ -3,7 +3,9 @@ package com.evo.points;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -13,26 +15,39 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.evo.points.adapter.RewardAdapter;
 import com.evo.points.calculator.EvoCalculatorCore;
 import com.evo.points.model.Reward;
+import com.evo.points.util.AssetBitmapLoader;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Главный экран: выбор дня, ввод ресурсов, расчёт очков и показ наград из {@code assets/img}.
+ *
+ * <p>Сохранение ввода реализовано через {@link EvoDataViewModel} – данные переживают
+ * смену дня, поворот экрана и переключение между фрагментами/активностями.
+ */
 public class MainActivity extends AppCompatActivity {
+    private LinearLayout rewardsImagesContainer;
+    private static final String TAG = "EvoCalc";
+    private static final int DAY_COUNT = 7;
+    private static final int MAX_TOP_REWARD_IMAGE_SIDE_PX = 2048;
+
+    // ViewModel для хранения введённых данных
+    private EvoDataViewModel viewModel;
 
     private Spinner daySpinner;
     private LinearLayout inputContainer;
     private MaterialButton calculateButton;
     private MaterialCardView resultCard;
     private TextView resultText;
-    
+
     // Аккордеон 1: обычные награды
     private MaterialCardView rewardsAccordionCard;
     private LinearLayout rewardsAccordionHeader;
@@ -40,77 +55,115 @@ public class MainActivity extends AppCompatActivity {
     private ImageView rewardsAccordionIcon;
     private TextView pointsText;
     private TextView day6ProbabilitiesText;
-    private RecyclerView rewardsRecyclerView;
-    private RewardAdapter rewardAdapter;
-    
+
     // Аккордеон 2: топ награда
     private MaterialCardView topRewardAccordionCard;
     private LinearLayout topRewardAccordionHeader;
     private LinearLayout topRewardAccordionContent;
     private ImageView topRewardAccordionIcon;
     private ImageView topRewardImage;
-    
+
     private MaterialButton donateYoomoneyButton;
     private MaterialButton donateSberButton;
+    private MaterialButton clearAllButton;
 
     private int selectedDay = 0;
     private boolean isRewardsAccordionExpanded = false;
     private boolean isTopRewardAccordionExpanded = false;
+    private final List<EditText> inputFields = new ArrayList<>();
+    private List<DayUiConfig> dayConfigs;
+
+    // Интерфейсы для конфигурации дней
+    private interface DayPointsCalculator {
+        int calculate(List<Integer> values);
+    }
+
+    private interface DayRewardsProvider {
+        List<Reward> getRewards(int points);
+    }
+
+    private static class DayUiConfig {
+        private final String resultLabel;
+        private final String[] inputHints;
+        private final DayPointsCalculator pointsCalculator;
+        private final DayRewardsProvider rewardsProvider;
+        private final boolean showDay6Probabilities;
+        private final int greenBoxesIndex;
+        private final int blueBoxesIndex;
+
+        private DayUiConfig(String resultLabel,
+                            String[] inputHints,
+                            DayPointsCalculator pointsCalculator,
+                            DayRewardsProvider rewardsProvider,
+                            boolean showDay6Probabilities,
+                            int greenBoxesIndex,
+                            int blueBoxesIndex) {
+            this.resultLabel = resultLabel;
+            this.inputHints = inputHints;
+            this.pointsCalculator = pointsCalculator;
+            this.rewardsProvider = rewardsProvider;
+            this.showDay6Probabilities = showDay6Probabilities;
+            this.greenBoxesIndex = greenBoxesIndex;
+            this.blueBoxesIndex = blueBoxesIndex;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Инициализация ViewModel (после setContentView)
+        viewModel = new ViewModelProvider(this).get(EvoDataViewModel.class);
+
+        // Привязка View
         daySpinner = findViewById(R.id.daySpinner);
         inputContainer = findViewById(R.id.inputContainer);
         calculateButton = findViewById(R.id.calculateButton);
+        clearAllButton = findViewById(R.id.clearAllButton);
         resultCard = findViewById(R.id.resultCard);
         resultText = findViewById(R.id.resultText);
-        
-        // Аккордеон 1
+
+        // Аккордеон 1: обычные награды
         rewardsAccordionCard = findViewById(R.id.rewardsAccordionCard);
         rewardsAccordionHeader = findViewById(R.id.rewardsAccordionHeader);
         rewardsAccordionContent = findViewById(R.id.rewardsAccordionContent);
         rewardsAccordionIcon = findViewById(R.id.rewardsAccordionIcon);
         pointsText = findViewById(R.id.pointsText);
         day6ProbabilitiesText = findViewById(R.id.day6ProbabilitiesText);
-        rewardsRecyclerView = findViewById(R.id.rewardsRecyclerView);
-        
-        // Аккордеон 2
+
+        // 🔥 Новый контейнер для наград (вместо RecyclerView)
+        rewardsImagesContainer = findViewById(R.id.rewardsImagesContainer);
+
+        // Аккордеон 2: топ награда
         topRewardAccordionCard = findViewById(R.id.topRewardAccordionCard);
         topRewardAccordionHeader = findViewById(R.id.topRewardAccordionHeader);
         topRewardAccordionContent = findViewById(R.id.topRewardAccordionContent);
         topRewardAccordionIcon = findViewById(R.id.topRewardAccordionIcon);
         topRewardImage = findViewById(R.id.topRewardImage);
-        
+
         donateYoomoneyButton = findViewById(R.id.donateYoomoneyButton);
         donateSberButton = findViewById(R.id.donateSberButton);
 
-        // Настройка RecyclerView для наград
-        rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        rewardAdapter = new RewardAdapter(this);
-        rewardsRecyclerView.setAdapter(rewardAdapter);
+        // Создаём конфигурации дней
+        dayConfigs = createDayConfigs();
 
-        // Обработчик клика на аккордеон 1
+        // Обработчики аккордеонов
         rewardsAccordionHeader.setOnClickListener(v -> toggleRewardsAccordion());
-
-        // Обработчик клика на аккордеон 2
         topRewardAccordionHeader.setOnClickListener(v -> toggleTopRewardAccordion());
 
         // Настройка Spinner
         ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(this,
                 R.layout.spinner_item, android.R.id.text1, getResources().getStringArray(R.array.days_array)) {
-            @Override
-            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+
+            public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 TextView textView = (TextView) view;
                 textView.setTextColor(getResources().getColor(R.color.kanagawa_text, null));
                 return view;
             }
 
-            @Override
-            public View getDropDownView(int position, View convertView, android.view.ViewGroup parent) {
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
                 View view = super.getDropDownView(position, convertView, parent);
                 TextView textView = (TextView) view;
                 textView.setTextColor(getResources().getColor(R.color.kanagawa_text, null));
@@ -123,7 +176,11 @@ public class MainActivity extends AppCompatActivity {
         daySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == selectedDay) return;
+                persistDraftForDayIndex(selectedDay);
+                clearResultUi();
                 selectedDay = position;
+                Log.i(TAG, "Выбран день: " + (selectedDay + 1));
                 createInputFields();
             }
 
@@ -132,23 +189,111 @@ public class MainActivity extends AppCompatActivity {
         });
 
         calculateButton.setOnClickListener(v -> calculatePoints());
+        clearAllButton.setOnClickListener(v -> showClearConfirmDialog());
 
-        // Кнопки доната
         donateYoomoneyButton.setOnClickListener(v -> {
-            String url = getString(R.string.yoomoney_link);
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.yoomoney_link)));
             startActivity(intent);
         });
-
         donateSberButton.setOnClickListener(v -> {
-            String url = getString(R.string.sber_link);
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.sber_link)));
             startActivity(intent);
         });
 
+        // Создаём поля ввода для начального дня
         createInputFields();
+    }
+
+    // ==================== Работа с черновиками через ViewModel ====================
+
+    /**
+     * Сохраняет текущие значения полей для указанного дня в ViewModel.
+     */
+    private void persistDraftForDayIndex(int dayIndex) {
+        if (dayIndex < 0 || dayIndex >= DAY_COUNT || inputFields.isEmpty()) return;
+        List<String> snapshot = new ArrayList<>(inputFields.size());
+        for (EditText et : inputFields) {
+            snapshot.add(et.getText().toString());
+        }
+        viewModel.getDayInputs().put(dayIndex, snapshot);
+        Log.d(TAG, "Сохранили день " + (dayIndex + 1) + ": " + snapshot);
+    }
+
+    /**
+     * Восстанавливает значения полей для текущего дня из ViewModel.
+     */
+    private void applyDraftForCurrentDay() {
+        List<String> draft = viewModel.getDayInputs().get(selectedDay);
+        if (draft == null || draft.size() != inputFields.size()) {
+            Log.d(TAG, "Нет сохранённых данных для дня " + (selectedDay + 1));
+            return;
+        }
+        for (int i = 0; i < draft.size(); i++) {
+            inputFields.get(i).setText(draft.get(i));
+        }
+        Log.d(TAG, "Восстановили день " + (selectedDay + 1) + ": " + draft);
+
+        // Автоматический расчёт, если все поля заполнены
+        boolean allFilled = true;
+        for (EditText et : inputFields) {
+            if (et.getText().toString().trim().isEmpty()) {
+                allFilled = false;
+                break;
+            }
+        }
+        if (allFilled) {
+            calculatePoints();
+        }
+    }
+
+    /**
+     * Полная очистка всех сохранённых данных.
+     */
+    private void clearAllInputDrafts() {
+        viewModel.getDayInputs().clear();
+        viewModel.getDayPoints().clear();
+        Log.d(TAG, "Все черновики очищены");
+    }
+
+    // ==================== UI методы ====================
+
+    private void showClearConfirmDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.clear_all_confirm_title)
+                .setMessage(R.string.clear_all_confirm_message)
+                .setPositiveButton(R.string.yes, (dialog, which) -> clearAllData())
+                .setNegativeButton(R.string.no, null)
+                .show();
+    }
+
+    private void clearAllData() {
+        clearAllInputDrafts();
+        for (EditText et : inputFields) {
+            et.setText("");
+        }
+        clearResultUi();
+    }
+
+    private void clearResultUi() {
+        resultCard.setVisibility(View.GONE);
+        resultText.setText("");
+        pointsText.setText("Количество очков: 0");
+        day6ProbabilitiesText.setVisibility(View.GONE);
+
+        // 🔥 Очищаем контейнер с наградами вместо адаптера
+        if (rewardsImagesContainer != null) {
+            rewardsImagesContainer.removeAllViews();
+        }
+        topRewardImage.setImageDrawable(null);
+
+        isRewardsAccordionExpanded = false;
+        isTopRewardAccordionExpanded = false;
+        rewardsAccordionContent.setVisibility(View.GONE);
+        topRewardAccordionContent.setVisibility(View.GONE);
+        rewardsAccordionIcon.setImageResource(R.drawable.ic_expand_more);
+        topRewardAccordionIcon.setImageResource(R.drawable.ic_expand_more);
+        rewardsAccordionCard.setVisibility(View.GONE);
+        topRewardAccordionCard.setVisibility(View.GONE);
     }
 
     private void toggleRewardsAccordion() {
@@ -165,7 +310,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void createInputFields() {
         inputContainer.removeAllViews();
-        
+        inputFields.clear();
+
         // Сброс аккордеонов
         rewardsAccordionCard.setVisibility(View.GONE);
         topRewardAccordionCard.setVisibility(View.GONE);
@@ -176,14 +322,12 @@ public class MainActivity extends AppCompatActivity {
         rewardsAccordionIcon.setImageResource(R.drawable.ic_expand_more);
         topRewardAccordionIcon.setImageResource(R.drawable.ic_expand_more);
 
-        String[] inputs = getInputsForDay(selectedDay);
-        String[] hints = getHintsForDay(selectedDay);
-
-        for (int i = 0; i < inputs.length; i++) {
+        DayUiConfig config = getCurrentDayConfig();
+        for (String hint : config.inputHints) {
             EditText editText = new EditText(this);
             editText.setId(View.generateViewId());
             editText.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-            editText.setHint(hints[i]);
+            editText.setHint(hint);
             editText.setTextColor(getResources().getColor(R.color.kanagawa_text, null));
             editText.setHintTextColor(getResources().getColor(R.color.kanagawa_text_dim, null));
             editText.setBackgroundTintList(getResources().getColorStateList(R.color.kanagawa_accent, null));
@@ -195,53 +339,14 @@ public class MainActivity extends AppCompatActivity {
             editText.setLayoutParams(params);
 
             inputContainer.addView(editText);
+            inputFields.add(editText);
         }
+
+        // Восстанавливаем сохранённые значения для этого дня
+        applyDraftForCurrentDay();
     }
 
-    private String[] getInputsForDay(int day) {
-        switch (day) {
-            case 0: // День 1 - Энергия
-                return new String[]{"energy", "donate"};
-            case 1: // День 2 - Экипировка
-                return new String[]{"tickets", "donate"};
-            case 2: // День 3 - Лагерь
-                return new String[]{"steel", "energy", "boost", "battleCore", "devCore", "donate"};
-            case 3: // День 4 - Чертежи
-                return new String[]{"commonModules", "advancedModules", "donate"};
-            case 4: // День 5 - Невролинк
-                return new String[]{"synapticChips", "neuroCoder", "corticalImplant", "donate"};
-            case 5: // День 6 - Оружие/Акс.
-                return new String[]{"weaponTickets", "greenBoxes", "blueBoxes", "violetBoxes", "yellowBoxes", "donate"};
-            case 6: // День 7 - Пополнение
-                return new String[]{"donate"};
-            default:
-                return new String[]{};
-        }
-    }
-
-    private String[] getHintsForDay(int day) {
-        switch (day) {
-            case 0:
-                return new String[]{"Количество энергии", "Пополнения"};
-            case 1:
-                return new String[]{"Билеты на экипировку", "Пополнения"};
-            case 2:
-                return new String[]{"Сталь", "Энергия", "Ускорения", "Техноядро (бой)", "Техноядро (развитие)", "Пополнения"};
-            case 3:
-                return new String[]{"Обычные модули", "Продвинутые модули", "Пополнения"};
-            case 4:
-                return new String[]{"Чипы синаптического усиления", "Нейрокодировщик", "Кортикальный имплант", "Пополнения"};
-            case 5:
-                return new String[]{"Билеты розыгрыша оружия", "Зелёные ящики", "Синие ящики", "Фиолетовые ящики", "Жёлтые ящики", "Пополнения"};
-            case 6:
-                return new String[]{"Пополнения"};
-            default:
-                return new String[]{};
-        }
-    }
-
-    private int getValue(int id) {
-        EditText edit = findViewById(id);
+    private int getValue(EditText edit) {
         if (edit == null) return 0;
         String val = edit.getText().toString().trim();
         if (val.isEmpty()) return 0;
@@ -253,68 +358,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void calculatePoints() {
-        int totalPoints = 0;
-        StringBuilder result = new StringBuilder();
-        List<Reward> normalRewards = new ArrayList<>();
-        Reward topReward = null;
-        int greenBoxes = 0;
-        int blueBoxes = 0;
+        DayUiConfig config = getCurrentDayConfig();
+        List<Integer> values = getInputValues();
+        Log.d(TAG, "Входные значения дня " + (selectedDay + 1) + ": " + values);
 
-        switch (selectedDay) {
-            case 0: // День 1
-                totalPoints = calculateDay1();
-                result.append("День 1 (Энергия): ").append(totalPoints).append(" очков");
-                normalRewards = getNormalRewards(EvoCalculatorCore.getDay1Rewards(totalPoints));
-                topReward = getTopReward(EvoCalculatorCore.getDay1Rewards(totalPoints));
-                break;
-            case 1: // День 2
-                totalPoints = calculateDay2();
-                result.append("День 2 (Экипировка): ").append(totalPoints).append(" очков");
-                normalRewards = getNormalRewards(EvoCalculatorCore.getDay2Rewards(totalPoints));
-                topReward = getTopReward(EvoCalculatorCore.getDay2Rewards(totalPoints));
-                break;
-            case 2: // День 3
-                totalPoints = calculateDay3();
-                result.append("День 3 (Лагерь): ").append(totalPoints).append(" очков");
-                normalRewards = getNormalRewards(EvoCalculatorCore.getDay3Rewards(totalPoints));
-                topReward = getTopReward(EvoCalculatorCore.getDay3Rewards(totalPoints));
-                break;
-            case 3: // День 4
-                totalPoints = calculateDay4();
-                result.append("День 4 (Чертежи): ").append(totalPoints).append(" очков");
-                normalRewards = getNormalRewards(EvoCalculatorCore.getDay4Rewards(totalPoints));
-                topReward = getTopReward(EvoCalculatorCore.getDay4Rewards(totalPoints));
-                break;
-            case 4: // День 5
-                totalPoints = calculateDay5();
-                result.append("День 5 (Невролинк): ").append(totalPoints).append(" очков");
-                normalRewards = getNormalRewards(EvoCalculatorCore.getDay5Rewards(totalPoints));
-                topReward = getTopReward(EvoCalculatorCore.getDay5Rewards(totalPoints));
-                break;
-            case 5: // День 6
-                totalPoints = calculateDay6();
-                result.append("День 6 (Оружие/Акс.): ").append(totalPoints).append(" очков");
-                greenBoxes = getValue(inputContainer.getChildAt(1).getId());
-                blueBoxes = getValue(inputContainer.getChildAt(2).getId());
-                normalRewards = getNormalRewards(EvoCalculatorCore.getDay6Rewards(totalPoints));
-                topReward = getTopReward(EvoCalculatorCore.getDay6Rewards(totalPoints));
-                break;
-            case 6: // День 7
-                totalPoints = calculateDay7();
-                result.append("День 7 (Пополнение): ").append(totalPoints).append(" очков");
-                topReward = getTopReward(EvoCalculatorCore.getDay7Rewards(totalPoints));
-                break;
-        }
+        int totalPoints = config.pointsCalculator.calculate(values);
+        List<Reward> allRewards = config.rewardsProvider.getRewards(totalPoints);
+        List<Reward> normalRewards = getNormalRewards(allRewards);
+        Reward topReward = getTopReward(allRewards);
 
-        resultText.setText(result.toString());
+        // Сохраняем рассчитанные очки в ViewModel (опционально)
+        viewModel.getDayPoints().put(selectedDay, totalPoints);
 
-        // Обновляем количество очков
+        Log.i(TAG, "Расчёт: day=" + (selectedDay + 1) + ", points=" + totalPoints +
+                ", normalRewards=" + normalRewards.size() + ", hasTop=" + (topReward != null));
+
+        resultText.setText(config.resultLabel + ": " + totalPoints + " очков");
         pointsText.setText("Количество очков: " + totalPoints);
 
-        // Показываем вероятности для Дня 6
-        if (selectedDay == 5) { // День 6
-            String probabilities = getDay6ProbabilitiesText(greenBoxes, blueBoxes);
-            day6ProbabilitiesText.setText(probabilities);
+        // Вероятности для дня 6
+        if (config.showDay6Probabilities) {
+            int greenBoxes = getValueByIndex(values, config.greenBoxesIndex);
+            int blueBoxes = getValueByIndex(values, config.blueBoxesIndex);
+            day6ProbabilitiesText.setText(getDay6ProbabilitiesText(greenBoxes, blueBoxes));
             day6ProbabilitiesText.setVisibility(View.VISIBLE);
         } else {
             day6ProbabilitiesText.setVisibility(View.GONE);
@@ -322,44 +388,102 @@ public class MainActivity extends AppCompatActivity {
 
         // Отображение аккордеона с обычными наградами
         if (normalRewards != null && !normalRewards.isEmpty()) {
-            rewardAdapter.setRewards(normalRewards);
+            displayRewardsInContainer(normalRewards); // 🔥 новый метод
             rewardsAccordionCard.setVisibility(View.VISIBLE);
         } else {
+            rewardsImagesContainer.removeAllViews();
+            rewardsImagesContainer.setVisibility(View.GONE);
             rewardsAccordionCard.setVisibility(View.GONE);
         }
 
-        // Отображение аккордеона с топ наградой (всегда показывается для дней 1-6, для дня 7 только топ)
+        // Топ награда
         if (topReward != null && topReward.hasScreenshot()) {
             String topPath = topReward.getScreenshotPath();
-            
-            // Загружаем из assets
             try {
-                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(
-                    getAssets().open(topPath)
-                );
-                topRewardImage.setImageBitmap(bitmap);
-                topRewardAccordionCard.setVisibility(View.VISIBLE);
-            } catch (Exception e) {
-                e.printStackTrace();
+                android.graphics.Bitmap bitmap = AssetBitmapLoader.decodeSampled(
+                        this, topPath, MAX_TOP_REWARD_IMAGE_SIDE_PX);
+                if (bitmap != null) {
+                    topRewardImage.setImageBitmap(bitmap);
+                    topRewardAccordionCard.setVisibility(View.VISIBLE);
+                } else {
+                    topRewardAccordionCard.setVisibility(View.GONE);
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Ошибка загрузки топ-награды: " + topPath, e);
                 topRewardAccordionCard.setVisibility(View.GONE);
             }
+        } else {
+            topRewardAccordionCard.setVisibility(View.GONE);
         }
 
         resultCard.setVisibility(View.VISIBLE);
+        // Сохраняем текущий ввод после расчёта
+        persistDraftForDayIndex(selectedDay);
     }
 
-    /**
-     * Текст с вероятностями для Дня 6
-     */
+    // ==================== Вспомогательные методы ====================
+
+    private DayUiConfig getCurrentDayConfig() {
+        if (selectedDay < 0 || selectedDay >= dayConfigs.size()) return dayConfigs.get(0);
+        return dayConfigs.get(selectedDay);
+    }
+
+    private List<Integer> getInputValues() {
+        List<Integer> values = new ArrayList<>(inputFields.size());
+        for (EditText et : inputFields) values.add(getValue(et));
+        return values;
+    }
+
+    private int getValueByIndex(List<Integer> values, int index) {
+        return (index >= 0 && index < values.size()) ? values.get(index) : 0;
+    }
+
+    private List<DayUiConfig> createDayConfigs() {
+        List<DayUiConfig> configs = new ArrayList<>();
+        configs.add(new DayUiConfig("День 1 (Карты эволюции)",
+                new String[]{"Карты эволюции"},
+                values -> EvoCalculatorCore.calculateDay1(getValueByIndex(values, 0)),
+                EvoCalculatorCore::getDay1Rewards, false, -1, -1));
+        configs.add(new DayUiConfig("День 2 (Экипировка)",
+                new String[]{"Билеты на экипировку", "Пополнения"},
+                values -> EvoCalculatorCore.calculateDay2(getValueByIndex(values, 0), getValueByIndex(values, 1)),
+                EvoCalculatorCore::getDay2Rewards, false, -1, -1));
+        configs.add(new DayUiConfig("День 3 (Лагерь)",
+                new String[]{"Сталь", "Энергия", "Ускорения", "Техноядро (бой)", "Техноядро (развитие)", "Пополнения"},
+                values -> EvoCalculatorCore.calculateDay3(getValueByIndex(values, 0), getValueByIndex(values, 1),
+                        getValueByIndex(values, 2), getValueByIndex(values, 3), getValueByIndex(values, 4),
+                        getValueByIndex(values, 5)),
+                EvoCalculatorCore::getDay3Rewards, false, -1, -1));
+        configs.add(new DayUiConfig("День 4 (Чертежи)",
+                new String[]{"Обычные модули", "Продвинутые модули", "Пополнения"},
+                values -> EvoCalculatorCore.calculateDay4(getValueByIndex(values, 0), getValueByIndex(values, 1),
+                        getValueByIndex(values, 2)),
+                EvoCalculatorCore::getDay4Rewards, false, -1, -1));
+        configs.add(new DayUiConfig("День 5 (Невролинк)",
+                new String[]{"Чипы синаптического усиления", "Нейрокодировщик", "Кортикальный имплант", "Пополнения"},
+                values -> EvoCalculatorCore.calculateDay5(getValueByIndex(values, 0), getValueByIndex(values, 1),
+                        getValueByIndex(values, 2), getValueByIndex(values, 3)),
+                EvoCalculatorCore::getDay5Rewards, false, -1, -1));
+        configs.add(new DayUiConfig("День 6 (Оружие/Акс.)",
+                new String[]{"Билеты розыгрыша оружия", "Зелёные ящики", "Синие ящики", "Фиолетовые ящики", "Жёлтые ящики", "Пополнения"},
+                values -> EvoCalculatorCore.calculateDay6(getValueByIndex(values, 0), getValueByIndex(values, 1),
+                        getValueByIndex(values, 2), getValueByIndex(values, 3), getValueByIndex(values, 4),
+                        getValueByIndex(values, 5)),
+                EvoCalculatorCore::getDay6Rewards, true, 1, 2));
+        configs.add(new DayUiConfig("День 7 (Пополнение)",
+                new String[]{"Пополнения"},
+                values -> EvoCalculatorCore.calculateDay7(getValueByIndex(values, 0)),
+                EvoCalculatorCore::getDay7Rewards, false, -1, -1));
+        return configs;
+    }
+
     private String getDay6ProbabilitiesText(int greenBoxes, int blueBoxes) {
         double expectedBlueFromGreen = greenBoxes * 0.05;
         double expectedVioletFromBlue = blueBoxes * 0.04;
-
         int minBlue = (int) Math.floor(expectedBlueFromGreen * 0.5);
         int maxBlue = (int) Math.ceil(expectedBlueFromGreen * 1.5);
         int minViolet = (int) Math.floor(expectedVioletFromBlue * 0.5);
         int maxViolet = (int) Math.ceil(expectedVioletFromBlue * 1.5);
-
         int blueCount = (int) Math.round(expectedBlueFromGreen);
         int violetCount = (int) Math.round(expectedVioletFromBlue);
 
@@ -367,94 +491,90 @@ public class MainActivity extends AppCompatActivity {
         sb.append("🎲 ДОПОЛНИТЕЛЬНО ВЫ МОЖЕТЕ ПОЛУЧИТЬ ПРИ ОТКРЫТИИ СУНДУКОВ:\n");
         sb.append("Приблизительный расчёт (ожидаемое количество, диапазон с учётом случайности):\n");
         sb.append("  🔵 Синих сундуков из зелёных (5%): ~").append(blueCount)
-          .append(" (от ").append(minBlue).append(" до ").append(maxBlue).append(")\n");
+                .append(" (от ").append(minBlue).append(" до ").append(maxBlue).append(")\n");
         sb.append("  🟣 Фиолетовых сундуков из синих (4%): ~").append(violetCount)
-          .append(" (от ").append(minViolet).append(" до ").append(maxViolet).append(")\n");
-
+                .append(" (от ").append(minViolet).append(" до ").append(maxViolet).append(")\n");
         int potentialPoints = blueCount * 30 + violetCount * 250;
         int minPotentialPoints = minBlue * 30 + minViolet * 250;
         int maxPotentialPoints = maxBlue * 30 + maxViolet * 250;
-
         sb.append("\n💎 Потенциально дополнительных очков: ~").append(potentialPoints)
-          .append(" (от ").append(minPotentialPoints).append(" до ").append(maxPotentialPoints).append(")");
-
+                .append(" (от ").append(minPotentialPoints).append(" до ").append(maxPotentialPoints).append(")");
         return sb.toString();
     }
 
-    /**
-     * Фильтрует обычные награды (не топ)
-     */
     private List<Reward> getNormalRewards(List<Reward> allRewards) {
         List<Reward> normal = new ArrayList<>();
-        for (Reward r : allRewards) {
-            if (!r.isTopReward()) {
-                normal.add(r);
-            }
-        }
+        for (Reward r : allRewards) if (!r.isTopReward()) normal.add(r);
         return normal;
     }
 
-    /**
-     * Находит топ награду
-     */
     private Reward getTopReward(List<Reward> allRewards) {
-        for (Reward r : allRewards) {
-            if (r.isTopReward()) {
-                return r;
-            }
-        }
+        for (Reward r : allRewards) if (r.isTopReward()) return r;
         return null;
     }
 
-    private int calculateDay1() {
-        int energy = getValue(inputContainer.getChildAt(0).getId());
-        int donate = getValue(inputContainer.getChildAt(1).getId());
-        return energy * 30 + donate * 3;
-    }
+    /**
+     * Отображает список наград как ImageView в LinearLayout.
+     * С ограничением размера, чтобы изображения не были слишком большими.
+     */
+    /**
+     * Отображает список наград как ImageView в LinearLayout.
+     * Масштаб регулируется одной переменной IMAGE_SCALE_FACTOR.
+     */
+    /**
+     * Отображает список наград как ImageView в LinearLayout.
+     * Размер контролируется через res/values/dimens.xml (в процентах).
+     */
+    private void displayRewardsInContainer(List<Reward> rewards) {
+        rewardsImagesContainer.removeAllViews();
 
-    private int calculateDay2() {
-        int tickets = getValue(inputContainer.getChildAt(0).getId());
-        int donate = getValue(inputContainer.getChildAt(1).getId());
-        return tickets * 300 + donate * 3;
-    }
+        if (rewards == null || rewards.isEmpty()) {
+            rewardsImagesContainer.setVisibility(View.GONE);
+            return;
+        }
 
-    private int calculateDay3() {
-        int steel = getValue(inputContainer.getChildAt(0).getId());
-        int energy = getValue(inputContainer.getChildAt(1).getId());
-        int boost = getValue(inputContainer.getChildAt(2).getId());
-        int battleCore = getValue(inputContainer.getChildAt(3).getId());
-        int devCore = getValue(inputContainer.getChildAt(4).getId());
-        int donate = getValue(inputContainer.getChildAt(5).getId());
-        return (steel / 200) + (energy / 200) + boost + (battleCore * 500) + (devCore * 500) + donate * 3;
-    }
+        rewardsImagesContainer.setVisibility(View.VISIBLE);
 
-    private int calculateDay4() {
-        int common = getValue(inputContainer.getChildAt(0).getId());
-        int advanced = getValue(inputContainer.getChildAt(1).getId());
-        int donate = getValue(inputContainer.getChildAt(2).getId());
-        return common * 30 + advanced * 810 + donate * 3;
-    }
+        // 🔥 Читаем настройки из dimens.xml
+        // Делим на 100.0f, чтобы получить коэффициент: 50 → 0.5
+        final float SCALE_FACTOR = getResources().getInteger(R.integer.reward_image_scale_percent) / 100.0f;
 
-    private int calculateDay5() {
-        int synapticChips = getValue(inputContainer.getChildAt(0).getId());
-        int neuroCoder = getValue(inputContainer.getChildAt(1).getId());
-        int corticalImplant = getValue(inputContainer.getChildAt(2).getId());
-        int donate = getValue(inputContainer.getChildAt(3).getId());
-        return synapticChips * 5 + neuroCoder * 10 + corticalImplant * 2000 + donate * 3;
-    }
+        final int BASE_SIZE = getResources().getInteger(R.integer.reward_decode_base_size);
+        final int DECODE_TARGET_SIZE = (int) (BASE_SIZE * SCALE_FACTOR);
+        final int MARGIN_BOTTOM = getResources().getDimensionPixelSize(R.dimen.reward_image_margin_bottom);
 
-    private int calculateDay6() {
-        int weaponTickets = getValue(inputContainer.getChildAt(0).getId());
-        int greenBoxes = getValue(inputContainer.getChildAt(1).getId());
-        int blueBoxes = getValue(inputContainer.getChildAt(2).getId());
-        int violetBoxes = getValue(inputContainer.getChildAt(3).getId());
-        int yellowBoxes = getValue(inputContainer.getChildAt(4).getId());
-        int donate = getValue(inputContainer.getChildAt(5).getId());
-        return weaponTickets * 120 + greenBoxes * 10 + blueBoxes * 30 + violetBoxes * 250 + yellowBoxes * 2500 + donate * 3;
-    }
+        for (Reward reward : rewards) {
+            if (!reward.hasScreenshot()) continue;
 
-    private int calculateDay7() {
-        int donate = getValue(inputContainer.getChildAt(0).getId());
-        return donate * 6;
+            ImageView imageView = new ImageView(this);
+            imageView.setAdjustViewBounds(true);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+            // Ширина: если масштаб < 1.0, то пропорционально экрану
+            int layoutWidth = SCALE_FACTOR >= 1.0f
+                    ? LinearLayout.LayoutParams.MATCH_PARENT
+                    : (int) (getResources().getDisplayMetrics().widthPixels * SCALE_FACTOR);
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    layoutWidth,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.gravity = android.view.Gravity.CENTER_HORIZONTAL;
+            params.setMargins(0, 0, 0, MARGIN_BOTTOM);
+            imageView.setLayoutParams(params);
+
+            String path = reward.getScreenshotPath();
+
+            try {
+                android.graphics.Bitmap bitmap = AssetBitmapLoader.decodeSampled(
+                        this, path, DECODE_TARGET_SIZE);
+                if (bitmap != null) {
+                    imageView.setImageBitmap(bitmap);
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "❌ Error loading: " + path, e);
+            }
+
+            rewardsImagesContainer.addView(imageView);
+        }
     }
 }

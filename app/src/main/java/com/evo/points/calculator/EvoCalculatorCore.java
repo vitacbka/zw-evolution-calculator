@@ -3,59 +3,34 @@ package com.evo.points.calculator;
 import com.evo.points.model.Reward;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Ядро калькулятора очков эволюции.
  * Содержит всю бизнес-логику расчёта очков и наград.
  */
 public class EvoCalculatorCore {
+    private static final Logger LOGGER = Logger.getLogger(EvoCalculatorCore.class.getName());
 
-    // ===== ID иконок для наград (placeholder) =====
-    public static final int ICON_TESSERACT = 1;
-    public static final int ICON_VOUCHER_GEAR = 2;
-    public static final int ICON_CHIP = 3;
-    public static final int ICON_VOUCHER_WEAPON = 4;
-    public static final int ICON_DIAMOND = 5;
-    public static final int ICON_CHEST_S = 6;
-    public static final int ICON_CHEST_RESOURCE = 7;
-    public static final int ICON_EPIC_GEAR = 8;
-    public static final int ICON_EXCHANGE_GEAR = 9;
-    public static final int ICON_TONIC = 10;
-    public static final int ICON_ORNAMENT_LEGENDARY = 11;
-    public static final int ICON_ORNAMENT_EPIC = 12;
-    public static final int ICON_TECH_CORE_BATTLE = 13;
-    public static final int ICON_TECH_CORE_DEV = 14;
-    public static final int ICON_MODULE_VI = 15;
-    public static final int ICON_MODULE_V = 16;
-    public static final int ICON_MODULE_EXCHANGE = 17;
-    public static final int ICON_ADVANCED_MODULE = 18;
-    public static final int ICON_NEURO_MATERIAL = 19;
-    public static final int ICON_NEURO_CHEST = 20;
-    public static final int ICON_WEAPON_CHEST = 21;
-    public static final int ICON_CRYSTAL_LEGENDARY = 22;
-    public static final int ICON_IMPLANT = 23;
-    public static final int ICON_ANTI_MATTER = 24;
-    public static final int ICON_PRECISION_COMPONENT = 25;
-    public static final int ICON_SUPPLY_CHEST_LEGENDARY = 26;
-    public static final int ICON_SUPPLY_CHEST_EPIC = 27;
-    public static final int ICON_SUPPLY_CHEST_ELITE = 28;
-    public static final int ICON_SUPPLY_CHEST_ADVANCED = 29;
-
-    // ===== Константы для Дня 1 (Энергия) =====
-    public static final int DAY1_ENERGY_POINTS = 30;
-    public static final int DAY1_DONATE_POINTS = 3;
-    public static final int DAY1_MIN_POINTS = 3000;
-    public static final int DAY1_MAX_POINTS = 69000;
+    // ===== Константы для Дня 1 (Карты эволюции) =====
+    public static final int DAY1_EVO_CARD_POINTS = 50;
+    public static final int DAY1_MIN_POINTS = 300;
 
     // Пути к скриншотам наград для Дня 1
-    public static final String DAY1_SCREENSHOT_BASE_PATH = "img/Day 1/";
-    public static final String DAY1_SCREENSHOT_3000 = "3000_revard.png";
-    public static final String DAY1_SCREENSHOT_9000 = "9000_revard.png";
-    public static final String DAY1_SCREENSHOT_20000 = "20000_revard.png";
-    public static final String DAY1_SCREENSHOT_36000 = "36000_revard.png";
-    public static final String DAY1_SCREENSHOT_40000 = "40000_revard.png";
-    public static final String DAY1_SCREENSHOT_TOP = "top_revard.png";
+    public static final String DAY1_SCREENSHOT_BASE_PATH = "img/day_1/";
+    public static final String DAY1_SCREENSHOT_300 = "300_reward.png";
+    public static final String DAY1_SCREENSHOT_1200 = "1200_reward.png";
+    public static final String DAY1_SCREENSHOT_3000 = "3000_reward.png";
+    public static final String DAY1_SCREENSHOT_6000 = "6000_reward.png";
+    public static final String DAY1_SCREENSHOT_15000 = "15000_reward.png";
+    public static final String DAY1_SCREENSHOT_30000 = "30000_reward.png";
+    public static final String DAY1_SCREENSHOT_48000 = "40000_reward.png"; // Using 40000 image for 48000 threshold as per assets
+    public static final String DAY1_SCREENSHOT_68000 = "68000_reward.png";
+    public static final String DAY1_SCREENSHOT_TOP = "top_reward.png";
 
     // ===== Константы для Дня 2 (Экипировка) =====
     public static final int DAY2_TICKET_POINTS = 300;
@@ -64,32 +39,37 @@ public class EvoCalculatorCore {
     public static final int DAY2_MAX_POINTS = 68000;
 
     // Пути к скриншотам наград для Дня 2
-    public static final String DAY2_SCREENSHOT_BASE_PATH = "img/Day 2/";
-    public static final String DAY2_SCREENSHOT_6000 = "6000_revard.png";
-    public static final String DAY2_SCREENSHOT_15000 = "15000_revard.png";
-    public static final String DAY2_SCREENSHOT_30000 = "30000_revard.png";
-    public static final String DAY2_SCREENSHOT_48000 = "48000_revard.png";
-    public static final String DAY2_SCREENSHOT_68000 = "68000_revard.png";
-    public static final String DAY2_SCREENSHOT_TOP = "2)day_top_tier_revard.png";
+    public static final String DAY2_SCREENSHOT_BASE_PATH = "img/day_2/";
+    public static final String DAY2_SCREENSHOT_300 = "300_reward.png";
+    public static final String DAY2_SCREENSHOT_1200 = "1200_reward.png";
+    public static final String DAY2_SCREENSHOT_2400 = "2400_reward.png";
+    public static final String DAY2_SCREENSHOT_6800 = "6800_reward.png";
+    public static final String DAY2_SCREENSHOT_15000 = "15000_reward.png";
+    public static final String DAY2_SCREENSHOT_30000 = "30000_reward.png";
+    public static final String DAY2_SCREENSHOT_48000 = "48000_reward.png";
+    public static final String DAY2_SCREENSHOT_68000 = "68000_reward.png";
+    public static final String DAY2_SCREENSHOT_TOP = "top_reward.png";
 
     // ===== Константы для Дня 3 (Лагерь) =====
     public static final int DAY3_STEEL_DIVISOR = 200;
     public static final int DAY3_ENERGY_DIVISOR = 200;
-    public static final int DAY3_BOOST_POINTS = 1;
+    public static final int DAY3_BOOST_DIVISOR = 2;
     public static final int DAY3_BATTLE_CORE_POINTS = 500;
     public static final int DAY3_DEV_CORE_POINTS = 500;
     public static final int DAY3_DONATE_POINTS = 3;
-    public static final int DAY3_MIN_POINTS = 6000;
-    public static final int DAY3_MAX_POINTS = 74000;
+    public static final int DAY3_MIN_POINTS = 300;
 
     // Пути к скриншотам наград для Дня 3
-    public static final String DAY3_SCREENSHOT_BASE_PATH = "img/Day 3/";
-    public static final String DAY3_SCREENSHOT_6000 = "6000_revard.png";
-    public static final String DAY3_SCREENSHOT_17000 = "17000_revard.png";
-    public static final String DAY3_SCREENSHOT_30000 = "30000_revard.png";
-    public static final String DAY3_SCREENSHOT_45000 = "45000_revard.png";
-    public static final String DAY3_SCREENSHOT_74000 = "74000_revard.png";
-    public static final String DAY3_SCREENSHOT_TOP = "top_revard.png";
+    public static final String DAY3_SCREENSHOT_BASE_PATH = "img/day_3/";
+    public static final String DAY3_SCREENSHOT_300 = "300_reward.png";
+    public static final String DAY3_SCREENSHOT_1200 = "1200_reward.png";
+    public static final String DAY3_SCREENSHOT_2400 = "2400_reward.png";
+    public static final String DAY3_SCREENSHOT_6000 = "6000_reward.png";
+    public static final String DAY3_SCREENSHOT_17000 = "17000_reward.png";
+    public static final String DAY3_SCREENSHOT_30000 = "30000_reward.png";
+    public static final String DAY3_SCREENSHOT_45000 = "45000_reward.png";
+    public static final String DAY3_SCREENSHOT_74000 = "74000_reward.png";
+    public static final String DAY3_SCREENSHOT_TOP = "top_reward.png";
 
     // ===== Константы для Дня 4 (Чертежи) =====
     public static final int DAY4_COMMON_POINTS = 30;
@@ -99,7 +79,7 @@ public class EvoCalculatorCore {
     public static final int DAY4_MAX_POINTS = 88000;
 
     // Пути к скриншотам наград для Дня 4
-    public static final String DAY4_SCREENSHOT_BASE_PATH = "img/Day 4/";
+    public static final String DAY4_SCREENSHOT_BASE_PATH = "img/day_4/";
     public static final String DAY4_SCREENSHOT_6000 = "6000_revard.png";
     public static final String DAY4_SCREENSHOT_15000 = "15000_revard.png";
     public static final String DAY4_SCREENSHOT_30000 = "30000_revard.png";
@@ -116,7 +96,7 @@ public class EvoCalculatorCore {
     public static final int DAY5_MAX_POINTS = 72000;
 
     // Пути к скриншотам наград для Дня 5
-    public static final String DAY5_SCREENSHOT_BASE_PATH = "img/Day 5/";
+    public static final String DAY5_SCREENSHOT_BASE_PATH = "img/day_5/";
     public static final String DAY5_SCREENSHOT_5000 = "5000_revard.png";
     public static final String DAY5_SCREENSHOT_10000 = "10000_revard.png";
     public static final String DAY5_SCREENSHOT_25000 = "25000_revard.png";
@@ -135,7 +115,7 @@ public class EvoCalculatorCore {
     public static final int DAY6_MAX_POINTS = 115000;
 
     // Пути к скриншотам наград для Дня 6
-    public static final String DAY6_SCREENSHOT_BASE_PATH = "img/Day 6/";
+    public static final String DAY6_SCREENSHOT_BASE_PATH = "img/day_6/";
     public static final String DAY6_SCREENSHOT_7500 = "7500_revard.png";
     public static final String DAY6_SCREENSHOT_20000 = "20000_revard.png";
     public static final String DAY6_SCREENSHOT_45000 = "45000_revard.png";
@@ -147,25 +127,161 @@ public class EvoCalculatorCore {
     public static final int DAY7_DONATE_POINTS = 6;
 
     // Пути к скриншотам наград для Дня 7
-    public static final String DAY7_SCREENSHOT_BASE_PATH = "img/Day 7/";
+    public static final String DAY7_SCREENSHOT_BASE_PATH = "img/day_7/";
     public static final String DAY7_SCREENSHOT_TOP = "top_revard.png";
 
     // Вероятности получения сундуков
     public static final double DAY6_BLUE_FROM_GREEN_CHANCE = 0.05; // 5%
     public static final double DAY6_VIOLET_FROM_BLUE_CHANCE = 0.04; // 4%
 
+    private static final class RewardTier {
+        private final int threshold;
+        private final String screenshotName;
+
+        private RewardTier(int threshold, String screenshotName) {
+            this.threshold = threshold;
+            this.screenshotName = screenshotName;
+        }
+    }
+
+    private static final class DayRewardConfig {
+        private final String basePath;
+        private final List<RewardTier> normalTiers;
+        private final Integer topThreshold;
+        private final String topScreenshotName;
+        private final boolean alwaysShowTop;
+
+        private DayRewardConfig(String basePath,
+                                List<RewardTier> normalTiers,
+                                Integer topThreshold,
+                                String topScreenshotName,
+                                boolean alwaysShowTop) {
+            this.basePath = basePath;
+            this.normalTiers = normalTiers;
+            this.topThreshold = topThreshold;
+            this.topScreenshotName = topScreenshotName;
+            this.alwaysShowTop = alwaysShowTop;
+        }
+    }
+
+    private static final DayRewardConfig DAY1_REWARD_CONFIG = new DayRewardConfig(
+            DAY1_SCREENSHOT_BASE_PATH,
+            Arrays.asList(
+                    new RewardTier(300, DAY1_SCREENSHOT_300),
+                    new RewardTier(1200, DAY1_SCREENSHOT_1200),
+                    new RewardTier(3000, DAY1_SCREENSHOT_3000),
+                    new RewardTier(6000, DAY1_SCREENSHOT_6000),
+                    new RewardTier(15000, DAY1_SCREENSHOT_15000),
+                    new RewardTier(30000, DAY1_SCREENSHOT_30000),
+                    new RewardTier(48000, DAY1_SCREENSHOT_48000),
+                    new RewardTier(68000, DAY1_SCREENSHOT_68000)
+            ),
+            68000,
+            DAY1_SCREENSHOT_TOP,
+            true
+    );
+
+    private static final DayRewardConfig DAY2_REWARD_CONFIG = new DayRewardConfig(
+            DAY2_SCREENSHOT_BASE_PATH,
+            Arrays.asList(
+                    new RewardTier(300, DAY2_SCREENSHOT_300),
+                    new RewardTier(1200, DAY2_SCREENSHOT_1200),
+                    new RewardTier(2400, DAY2_SCREENSHOT_2400),
+                    new RewardTier(6800, DAY2_SCREENSHOT_6800),
+                    new RewardTier(15000, DAY2_SCREENSHOT_15000),
+                    new RewardTier(30000, DAY2_SCREENSHOT_30000),
+                    new RewardTier(48000, DAY2_SCREENSHOT_48000),
+                    new RewardTier(68000, DAY2_SCREENSHOT_68000)
+            ),
+            68000,
+            DAY2_SCREENSHOT_TOP,
+            true
+    );
+
+    private static final DayRewardConfig DAY3_REWARD_CONFIG = new DayRewardConfig(
+            DAY3_SCREENSHOT_BASE_PATH,
+            Arrays.asList(
+                    new RewardTier(300, DAY3_SCREENSHOT_300),
+                    new RewardTier(1200, DAY3_SCREENSHOT_1200),
+                    new RewardTier(2400, DAY3_SCREENSHOT_2400),
+                    new RewardTier(6000, DAY3_SCREENSHOT_6000),
+                    new RewardTier(17000, DAY3_SCREENSHOT_17000),
+                    new RewardTier(30000, DAY3_SCREENSHOT_30000),
+                    new RewardTier(45000, DAY3_SCREENSHOT_45000),
+                    new RewardTier(74000, DAY3_SCREENSHOT_74000)
+            ),
+            DAY3_MIN_POINTS,
+            DAY3_SCREENSHOT_TOP,
+            true
+    );
+
+    private static final DayRewardConfig DAY4_REWARD_CONFIG = new DayRewardConfig(
+            DAY4_SCREENSHOT_BASE_PATH,
+            Arrays.asList(
+                    new RewardTier(6000, DAY4_SCREENSHOT_6000),
+                    new RewardTier(15000, DAY4_SCREENSHOT_15000),
+                    new RewardTier(30000, DAY4_SCREENSHOT_30000),
+                    new RewardTier(56000, DAY4_SCREENSHOT_56000),
+                    new RewardTier(88000, DAY4_SCREENSHOT_88000)
+            ),
+            88000,
+            DAY4_SCREENSHOT_TOP,
+            true
+    );
+
+    private static final DayRewardConfig DAY5_REWARD_CONFIG = new DayRewardConfig(
+            DAY5_SCREENSHOT_BASE_PATH,
+            Arrays.asList(
+                    new RewardTier(5000, DAY5_SCREENSHOT_5000),
+                    new RewardTier(10000, DAY5_SCREENSHOT_10000),
+                    new RewardTier(25000, DAY5_SCREENSHOT_25000),
+                    new RewardTier(48000, DAY5_SCREENSHOT_48000),
+                    new RewardTier(72000, DAY5_SCREENSHOT_72000)
+            ),
+            72000,
+            DAY5_SCREENSHOT_TOP,
+            true
+    );
+
+    private static final DayRewardConfig DAY6_REWARD_CONFIG = new DayRewardConfig(
+            DAY6_SCREENSHOT_BASE_PATH,
+            Arrays.asList(
+                    new RewardTier(7500, DAY6_SCREENSHOT_7500),
+                    new RewardTier(20000, DAY6_SCREENSHOT_20000),
+                    new RewardTier(45000, DAY6_SCREENSHOT_45000),
+                    new RewardTier(75000, DAY6_SCREENSHOT_75000),
+                    new RewardTier(115000, DAY6_SCREENSHOT_115000)
+            ),
+            115000,
+            DAY6_SCREENSHOT_TOP,
+            true
+    );
+
+    // День 7 уже подготовлен к расширению:
+    // - сейчас normalTiers пустой и показывается только TOP;
+    // - как только в игре появятся пороги обычных наград, добавьте их в normalTiers:
+    //   new RewardTier(10000, "10000_revard.png"), new RewardTier(25000, "25000_revard.png"), ...
+    // - если top должен открываться только от порога, задайте topThreshold и установите alwaysShowTop=false.
+    private static final DayRewardConfig DAY7_REWARD_CONFIG = new DayRewardConfig(
+            DAY7_SCREENSHOT_BASE_PATH,
+            Collections.emptyList(),
+            null,
+            DAY7_SCREENSHOT_TOP,
+            true
+    );
+
     // ===== Расчёт очков для всех дней =====
 
     /**
-     * День 1: Энергия
-     * @param energy количество энергии
-     * @param donate количество пополнений
+     * День 1: Карты эволюции
+     * @param cards количество карт эволюции
      * @return общее количество очков
      */
-    public static int calculateDay1(int energy, int donate) {
-        validateNonNegative(energy, "energy");
-        validateNonNegative(donate, "donate");
-        return energy * DAY1_ENERGY_POINTS + donate * DAY1_DONATE_POINTS;
+    public static int calculateDay1(int cards) {
+        validateNonNegative(cards, "cards");
+        int result = cards * DAY1_EVO_CARD_POINTS;
+        logCalculation("Day1", result, cards);
+        return result;
     }
 
     /**
@@ -177,7 +293,9 @@ public class EvoCalculatorCore {
     public static int calculateDay2(int tickets, int donate) {
         validateNonNegative(tickets, "tickets");
         validateNonNegative(donate, "donate");
-        return tickets * DAY2_TICKET_POINTS + donate * DAY2_DONATE_POINTS;
+        int result = tickets * DAY2_TICKET_POINTS + donate * DAY2_DONATE_POINTS;
+        logCalculation("Day2", result, tickets, donate);
+        return result;
     }
 
     /**
@@ -197,9 +315,16 @@ public class EvoCalculatorCore {
         validateNonNegative(battleCore, "battleCore");
         validateNonNegative(devCore, "devCore");
         validateNonNegative(donate, "donate");
-        return (steel / DAY3_STEEL_DIVISOR) + (energy / DAY3_ENERGY_DIVISOR) + 
-               (boost * DAY3_BOOST_POINTS) + (battleCore * DAY3_BATTLE_CORE_POINTS) + 
-               (devCore * DAY3_DEV_CORE_POINTS) + (donate * DAY3_DONATE_POINTS);
+
+        int result = (steel / DAY3_STEEL_DIVISOR) +
+                (energy / DAY3_ENERGY_DIVISOR) +
+                (boost / DAY3_BOOST_DIVISOR) +
+                (battleCore * DAY3_BATTLE_CORE_POINTS) +
+                (devCore * DAY3_DEV_CORE_POINTS) +
+                (donate * DAY3_DONATE_POINTS);
+
+        logCalculation("Day3", result, steel, energy, boost, battleCore, devCore, donate);
+        return result;
     }
 
     /**
@@ -213,7 +338,9 @@ public class EvoCalculatorCore {
         validateNonNegative(commonModules, "commonModules");
         validateNonNegative(advancedModules, "advancedModules");
         validateNonNegative(donate, "donate");
-        return commonModules * DAY4_COMMON_POINTS + advancedModules * DAY4_ADVANCED_POINTS + donate * DAY4_DONATE_POINTS;
+        int result = commonModules * DAY4_COMMON_POINTS + advancedModules * DAY4_ADVANCED_POINTS + donate * DAY4_DONATE_POINTS;
+        logCalculation("Day4", result, commonModules, advancedModules, donate);
+        return result;
     }
 
     /**
@@ -229,8 +356,10 @@ public class EvoCalculatorCore {
         validateNonNegative(neuroCoder, "neuroCoder");
         validateNonNegative(corticalImplant, "corticalImplant");
         validateNonNegative(donate, "donate");
-        return synapticChips * DAY5_SYNAPTIC_CHIP_POINTS + neuroCoder * DAY5_NEURO_CODER_POINTS + 
+        int result = synapticChips * DAY5_SYNAPTIC_CHIP_POINTS + neuroCoder * DAY5_NEURO_CODER_POINTS +
                corticalImplant * DAY5_CORTICAL_IMPLANT_POINTS + donate * DAY5_DONATE_POINTS;
+        logCalculation("Day5", result, synapticChips, neuroCoder, corticalImplant, donate);
+        return result;
     }
 
     /**
@@ -251,9 +380,11 @@ public class EvoCalculatorCore {
         validateNonNegative(violetBoxes, "violetBoxes");
         validateNonNegative(yellowBoxes, "yellowBoxes");
         validateNonNegative(donate, "donate");
-        return weaponTickets * DAY6_WEAPON_TICKET_POINTS + greenBoxes * DAY6_GREEN_BOX_POINTS + 
+        int result = weaponTickets * DAY6_WEAPON_TICKET_POINTS + greenBoxes * DAY6_GREEN_BOX_POINTS +
                blueBoxes * DAY6_BLUE_BOX_POINTS + violetBoxes * DAY6_VIOLET_BOX_POINTS + 
                yellowBoxes * DAY6_YELLOW_BOX_POINTS + donate * DAY6_DONATE_POINTS;
+        logCalculation("Day6", result, weaponTickets, greenBoxes, blueBoxes, violetBoxes, yellowBoxes, donate);
+        return result;
     }
 
     /**
@@ -263,7 +394,9 @@ public class EvoCalculatorCore {
      */
     public static int calculateDay7(int donate) {
         validateNonNegative(donate, "donate");
-        return donate * DAY7_DONATE_POINTS;
+        int result = donate * DAY7_DONATE_POINTS;
+        logCalculation("Day7", result, donate);
+        return result;
     }
 
     // ===== Расчёт вероятностей для Дня 6 =====
@@ -338,38 +471,7 @@ public class EvoCalculatorCore {
      * top_revard показывается ТОЛЬКО при 69000+
      */
     public static List<Reward> getDay1Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-
-        if (points >= 69000) {
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_3000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_9000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_20000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_36000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_40000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        } else if (points >= 40000) {
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_3000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_9000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_20000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_36000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_40000));
-        } else if (points >= 36000) {
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_3000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_9000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_20000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_36000));
-        } else if (points >= 20000) {
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_3000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_9000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_20000));
-        } else if (points >= 9000) {
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_3000));
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_9000));
-        } else if (points >= 3000) {
-            rewards.add(new Reward(DAY1_SCREENSHOT_BASE_PATH + DAY1_SCREENSHOT_3000));
-        }
-
-        return rewards;
+        return buildRewardsByConfig(points, DAY1_REWARD_CONFIG);
     }
 
     /**
@@ -378,32 +480,7 @@ public class EvoCalculatorCore {
      * top_revard показывается ТОЛЬКО при 68000+
      */
     public static List<Reward> getDay2Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-
-        if (points >= 68000) {
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_15000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_30000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_48000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_68000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        } else if (points >= 48000) {
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_15000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_30000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_48000));
-        } else if (points >= 30000) {
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_15000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_30000));
-        } else if (points >= 15000) {
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_15000));
-        } else if (points >= 6000) {
-            rewards.add(new Reward(DAY2_SCREENSHOT_BASE_PATH + DAY2_SCREENSHOT_6000));
-        }
-
-        return rewards;
+        return buildRewardsByConfig(points, DAY2_REWARD_CONFIG);
     }
 
     /**
@@ -412,32 +489,7 @@ public class EvoCalculatorCore {
      * top_revard показывается ТОЛЬКО при 74000+
      */
     public static List<Reward> getDay3Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-
-        if (points >= 74000) {
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_17000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_30000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_45000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_74000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        } else if (points >= 45000) {
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_17000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_30000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_45000));
-        } else if (points >= 30000) {
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_17000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_30000));
-        } else if (points >= 17000) {
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_17000));
-        } else if (points >= 6000) {
-            rewards.add(new Reward(DAY3_SCREENSHOT_BASE_PATH + DAY3_SCREENSHOT_6000));
-        }
-
-        return rewards;
+        return buildRewardsByConfig(points, DAY3_REWARD_CONFIG);
     }
 
     /**
@@ -446,32 +498,7 @@ public class EvoCalculatorCore {
      * top_revard показывается ТОЛЬКО при 88000+
      */
     public static List<Reward> getDay4Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-
-        if (points >= 88000) {
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_15000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_30000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_56000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_88000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        } else if (points >= 56000) {
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_15000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_30000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_56000));
-        } else if (points >= 30000) {
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_15000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_30000));
-        } else if (points >= 15000) {
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_6000));
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_15000));
-        } else if (points >= 6000) {
-            rewards.add(new Reward(DAY4_SCREENSHOT_BASE_PATH + DAY4_SCREENSHOT_6000));
-        }
-
-        return rewards;
+        return buildRewardsByConfig(points, DAY4_REWARD_CONFIG);
     }
 
     /**
@@ -480,32 +507,7 @@ public class EvoCalculatorCore {
      * top_revard показывается ТОЛЬКО при 72000+
      */
     public static List<Reward> getDay5Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-
-        if (points >= 72000) {
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_5000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_10000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_25000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_48000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_72000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        } else if (points >= 48000) {
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_5000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_10000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_25000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_48000));
-        } else if (points >= 25000) {
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_5000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_10000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_25000));
-        } else if (points >= 10000) {
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_5000));
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_10000));
-        } else if (points >= 5000) {
-            rewards.add(new Reward(DAY5_SCREENSHOT_BASE_PATH + DAY5_SCREENSHOT_5000));
-        }
-
-        return rewards;
+        return buildRewardsByConfig(points, DAY5_REWARD_CONFIG);
     }
 
     /**
@@ -514,41 +516,14 @@ public class EvoCalculatorCore {
      * top_revard показывается ТОЛЬКО при 115000+
      */
     public static List<Reward> getDay6Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-
-        if (points >= 115000) {
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_7500));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_20000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_45000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_75000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_115000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        } else if (points >= 75000) {
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_7500));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_20000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_45000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_75000));
-        } else if (points >= 45000) {
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_7500));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_20000));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_45000));
-        } else if (points >= 20000) {
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_7500));
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_20000));
-        } else if (points >= 7500) {
-            rewards.add(new Reward(DAY6_SCREENSHOT_BASE_PATH + DAY6_SCREENSHOT_7500));
-        }
-
-        return rewards;
+        return buildRewardsByConfig(points, DAY6_REWARD_CONFIG);
     }
 
     /**
      * День 7: Возвращает только топ награду (всегда показывается)
      */
     public static List<Reward> getDay7Rewards(int points) {
-        List<Reward> rewards = new ArrayList<>();
-        rewards.add(new Reward(DAY7_SCREENSHOT_BASE_PATH + DAY7_SCREENSHOT_TOP, Reward.RewardType.TOP));
-        return rewards;
+        return buildRewardsByConfig(points, DAY7_REWARD_CONFIG);
     }
 
     // ===== Вспомогательные методы =====
@@ -557,5 +532,37 @@ public class EvoCalculatorCore {
         if (value < 0) {
             throw new IllegalArgumentException(paramName + " не может быть отрицательным: " + value);
         }
+    }
+
+    private static List<Reward> buildRewardsByConfig(int points, DayRewardConfig config) {
+        List<Reward> rewards = new ArrayList<>();
+
+        // Пример логики: при points=30000 и tier-ах [6000, 15000, 30000, 48000]
+        // будут добавлены первые 3 изображения (награды до текущего порога включительно).
+        for (RewardTier tier : config.normalTiers) {
+            if (points >= tier.threshold) {
+                rewards.add(new Reward(config.basePath + tier.screenshotName));
+            }
+        }
+
+        boolean shouldShowTop = config.alwaysShowTop
+                || (config.topThreshold != null && points >= config.topThreshold);
+
+        if (shouldShowTop && config.topScreenshotName != null) {
+            rewards.add(new Reward(config.basePath + config.topScreenshotName, Reward.RewardType.TOP));
+        }
+
+        LOGGER.log(Level.FINE, "Rewards built for points={0}, count={1}, top={2}",
+                new Object[]{points, rewards.size(), shouldShowTop});
+
+        return rewards;
+    }
+
+    private static void logCalculation(String day, int result, int... values) {
+        if (!LOGGER.isLoggable(Level.FINE)) {
+            return;
+        }
+        LOGGER.log(Level.FINE, "{0} calculated: inputs={1}, points={2}",
+                new Object[]{day, Arrays.toString(values), result});
     }
 }

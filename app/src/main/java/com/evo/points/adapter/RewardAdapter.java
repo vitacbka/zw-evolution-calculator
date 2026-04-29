@@ -2,7 +2,7 @@ package com.evo.points.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,9 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.evo.points.model.Reward;
+import com.evo.points.util.AssetBitmapLoader;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,16 +22,20 @@ import java.util.List;
  * Адаптер для отображения списка наград со скриншотами.
  */
 public class RewardAdapter extends RecyclerView.Adapter<RewardAdapter.RewardViewHolder> {
+    private static final String TAG = "EvoCalc";
+    /** Максимум большей стороны bitmap для элемента списка (снижает память и уменьшает шанс null от декодера). */
+    private static final int MAX_REWARD_IMAGE_SIDE_PX = 900;
 
     private List<Reward> rewards = new ArrayList<>();
     private Context context;
 
     public RewardAdapter(Context context) {
         this.context = context;
+        setHasStableIds(true);
     }
 
     public void setRewards(List<Reward> rewards) {
-        this.rewards = rewards != null ? rewards : new ArrayList<>();
+        this.rewards = rewards != null ? new ArrayList<>(rewards) : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -50,6 +54,11 @@ public class RewardAdapter extends RecyclerView.Adapter<RewardAdapter.RewardView
     }
 
     @Override
+    public long getItemId(int position) {
+        return rewards.get(position).getScreenshotPath().hashCode();
+    }
+
+    @Override
     public int getItemCount() {
         return rewards.size();
     }
@@ -63,66 +72,29 @@ public class RewardAdapter extends RecyclerView.Adapter<RewardAdapter.RewardView
         }
 
         void bind(Reward reward, Context context) {
+            rewardImageView.setImageBitmap(null);
+            rewardImageView.setImageDrawable(null); // сброс
+
             if (reward.hasScreenshot()) {
                 String path = reward.getScreenshotPath();
-                
-                // Загружаем изображение из assets
+                Log.d(TAG, "🖼️ Loading reward image: " + path); // 🔍 DEBUG
+
                 try {
-                    InputStream inputStream = context.getAssets().open(path);
-                    Bitmap bitmap = decodeSampledBitmapFromStream(inputStream, 300, 60);
-                    rewardImageView.setImageBitmap(bitmap);
-                    inputStream.close();
+                    Bitmap bitmap = AssetBitmapLoader.decodeSampled(context, path, MAX_REWARD_IMAGE_SIDE_PX);
+                    if (bitmap == null) {
+                        Log.e(TAG, "❌ Декодер вернул null для: " + path);
+                    } else {
+                        rewardImageView.setImageBitmap(bitmap);
+                    }
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    // Фолбэк - заглушка
-                    rewardImageView.setImageResource(com.evo.points.R.drawable.ic_reward_chip);
+                    Log.e(TAG, "❌ Ошибка загрузки: " + path, e);
+                }
+
+                // 🔍 Проверка: если после всего этого изображение всё ещё пустое
+                if (rewardImageView.getDrawable() == null) {
+                    Log.w(TAG, "⚠️ ImageView остался пустым после bind(): " + path);
                 }
             }
-        }
-
-        /**
-         * Декодирует Bitmap с уменьшением размера для оптимизации памяти
-         */
-        private Bitmap decodeSampledBitmapFromStream(InputStream inputStream, int reqWidth, int reqHeight) {
-            // Сначала получаем размеры изображения
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            
-            // Создаём копию InputStream для первого прохода
-            try {
-                inputStream.mark(Integer.MAX_VALUE);
-                BitmapFactory.decodeStream(inputStream, null, options);
-                inputStream.reset();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            // Вычисляем inSampleSize
-            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-            // Декодируем с уменьшением
-            options.inJustDecodeBounds = false;
-            return BitmapFactory.decodeStream(inputStream, null, options);
-        }
-
-        /**
-         * Вычисляет коэффициент уменьшения изображения
-         */
-        private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-            final int height = options.outHeight;
-            final int width = options.outWidth;
-            int inSampleSize = 1;
-
-            if (height > reqHeight || width > reqWidth) {
-                final int halfHeight = height / 2;
-                final int halfWidth = width / 2;
-
-                while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                    inSampleSize *= 2;
-                }
-            }
-
-            return inSampleSize;
         }
     }
 }

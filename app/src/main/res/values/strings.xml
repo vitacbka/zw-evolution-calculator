@@ -12,9 +12,14 @@
     <string name="reward_icon_description">Иконка награды</string>
     <string name="rewards_title">🎁 Награды</string>
     <string name="no_rewards">Недостаточно очков для получения наград</string>
+    <string name="clear_all">Очистить все</string>
+    <string name="clear_all_confirm_title">Подтверждение</string>
+    <string name="clear_all_confirm_message">Вы уверены, что хотите очистить все поля?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
 
     <string-array name="days_array">
-        <item>День 1 — Энергия</item>
+        <item>День 1 — Карты эволюции</item>
         <item>День 2 — Экипировка</item>
         <item>День 3 — Лагерь</item>
         <item>День 4 — Чертежи</item>

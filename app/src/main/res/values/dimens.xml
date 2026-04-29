@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 🎚️ Масштаб изображений наград в ПРОЦЕНТАХ (от топ-награды 2048px) -->
+    <!-- 100 = как топ (100%), 50 = в 2 раза меньше, 75 = на 25% меньше -->
+    <integer name="reward_image_scale_percent">50</integer>
+
+    <!-- Базовый размер декодера (как у топ-награды) -->
+    <integer name="reward_decode_base_size">2048</integer>
+
+    <!-- Отступ между изображениями в списке -->
+    <dimen name="reward_image_margin_bottom">24dp</dimen>
+</resources>
