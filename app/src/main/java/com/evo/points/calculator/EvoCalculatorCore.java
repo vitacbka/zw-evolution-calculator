@@ -28,15 +28,14 @@ public class EvoCalculatorCore {
     public static final String DAY1_SCREENSHOT_6000 = "6000_reward.png";
     public static final String DAY1_SCREENSHOT_15000 = "15000_reward.png";
     public static final String DAY1_SCREENSHOT_30000 = "30000_reward.png";
-    public static final String DAY1_SCREENSHOT_48000 = "40000_reward.png"; // Using 40000 image for 48000 threshold as per assets
+    public static final String DAY1_SCREENSHOT_40000 = "40000_reward.png";
     public static final String DAY1_SCREENSHOT_68000 = "68000_reward.png";
     public static final String DAY1_SCREENSHOT_TOP = "top_reward.png";
 
     // ===== Константы для Дня 2 (Экипировка) =====
     public static final int DAY2_TICKET_POINTS = 300;
     public static final int DAY2_DONATE_POINTS = 3;
-    public static final int DAY2_MIN_POINTS = 6000;
-    public static final int DAY2_MAX_POINTS = 68000;
+    public static final int DAY2_MIN_POINTS = 300;
 
     // Пути к скриншотам наград для Дня 2
     public static final String DAY2_SCREENSHOT_BASE_PATH = "img/day_2/";
@@ -75,17 +74,19 @@ public class EvoCalculatorCore {
     public static final int DAY4_COMMON_POINTS = 30;
     public static final int DAY4_ADVANCED_POINTS = 810;
     public static final int DAY4_DONATE_POINTS = 3;
-    public static final int DAY4_MIN_POINTS = 6000;
-    public static final int DAY4_MAX_POINTS = 88000;
+    public static final int DAY4_MIN_POINTS = 300;
 
     // Пути к скриншотам наград для Дня 4
     public static final String DAY4_SCREENSHOT_BASE_PATH = "img/day_4/";
-    public static final String DAY4_SCREENSHOT_6000 = "6000_revard.png";
-    public static final String DAY4_SCREENSHOT_15000 = "15000_revard.png";
-    public static final String DAY4_SCREENSHOT_30000 = "30000_revard.png";
-    public static final String DAY4_SCREENSHOT_56000 = "56000_revard.png";
-    public static final String DAY4_SCREENSHOT_88000 = "88000_revard.png";
-    public static final String DAY4_SCREENSHOT_TOP = "top_revard.png";
+    public static final String DAY4_SCREENSHOT_300 = "300_reward.png";
+    public static final String DAY4_SCREENSHOT_1200 = "1200_reward.png";
+    public static final String DAY4_SCREENSHOT_2400 = "2400_reward.png";
+    public static final String DAY4_SCREENSHOT_6000 = "6000_reward.png";
+    public static final String DAY4_SCREENSHOT_15000 = "15000_reward.png";
+    public static final String DAY4_SCREENSHOT_30000 = "30000_reward.png";
+    public static final String DAY4_SCREENSHOT_56000 = "56000_reward.png";
+    public static final String DAY4_SCREENSHOT_88000 = "88000_reward.png";
+    public static final String DAY4_SCREENSHOT_TOP = "top_reward.png";
 
     // ===== Константы для Дня 5 (Невролинк) =====
     public static final int DAY5_SYNAPTIC_CHIP_POINTS = 5;
@@ -173,7 +174,7 @@ public class EvoCalculatorCore {
                     new RewardTier(6000, DAY1_SCREENSHOT_6000),
                     new RewardTier(15000, DAY1_SCREENSHOT_15000),
                     new RewardTier(30000, DAY1_SCREENSHOT_30000),
-                    new RewardTier(48000, DAY1_SCREENSHOT_48000),
+                    new RewardTier(40000, DAY1_SCREENSHOT_40000),
                     new RewardTier(68000, DAY1_SCREENSHOT_68000)
             ),
             68000,
@@ -210,7 +211,7 @@ public class EvoCalculatorCore {
                     new RewardTier(45000, DAY3_SCREENSHOT_45000),
                     new RewardTier(74000, DAY3_SCREENSHOT_74000)
             ),
-            DAY3_MIN_POINTS,
+            74000,
             DAY3_SCREENSHOT_TOP,
             true
     );
@@ -218,13 +219,16 @@ public class EvoCalculatorCore {
     private static final DayRewardConfig DAY4_REWARD_CONFIG = new DayRewardConfig(
             DAY4_SCREENSHOT_BASE_PATH,
             Arrays.asList(
+                    new RewardTier(300, DAY4_SCREENSHOT_300),
+                    new RewardTier(1200, DAY4_SCREENSHOT_1200),
+                    new RewardTier(2400, DAY4_SCREENSHOT_2400),
                     new RewardTier(6000, DAY4_SCREENSHOT_6000),
                     new RewardTier(15000, DAY4_SCREENSHOT_15000),
                     new RewardTier(30000, DAY4_SCREENSHOT_30000),
                     new RewardTier(56000, DAY4_SCREENSHOT_56000),
                     new RewardTier(88000, DAY4_SCREENSHOT_88000)
             ),
-            88000,
+            DAY4_MIN_POINTS,
             DAY4_SCREENSHOT_TOP,
             true
     );
@@ -274,6 +278,7 @@ public class EvoCalculatorCore {
 
     /**
      * День 1: Карты эволюции
+     *
      * @param cards количество карт эволюции
      * @return общее количество очков
      */
@@ -286,8 +291,9 @@ public class EvoCalculatorCore {
 
     /**
      * День 2: Экипировка
+     *
      * @param tickets количество билетов на экипировку
-     * @param donate количество пополнений
+     * @param donate  количество пополнений
      * @return общее количество очков
      */
     public static int calculateDay2(int tickets, int donate) {
@@ -300,12 +306,13 @@ public class EvoCalculatorCore {
 
     /**
      * День 3: Лагерь
-     * @param steel количество стали
-     * @param energy количество энергии
-     * @param boost количество ускорений
+     *
+     * @param steel      количество стали
+     * @param energy     количество энергии
+     * @param boost      количество ускорений
      * @param battleCore количество техноядер (бой)
-     * @param devCore количество техноядер (развитие)
-     * @param donate количество пополнений
+     * @param devCore    количество техноядер (развитие)
+     * @param donate     количество пополнений
      * @return общее количество очков
      */
     public static int calculateDay3(int steel, int energy, int boost, int battleCore, int devCore, int donate) {
@@ -329,9 +336,10 @@ public class EvoCalculatorCore {
 
     /**
      * День 4: Чертежи
-     * @param commonModules количество обычных модулей
+     *
+     * @param commonModules   количество обычных модулей
      * @param advancedModules количество продвинутых модулей
-     * @param donate количество пополнений
+     * @param donate          количество пополнений
      * @return общее количество очков
      */
     public static int calculateDay4(int commonModules, int advancedModules, int donate) {
@@ -345,10 +353,11 @@ public class EvoCalculatorCore {
 
     /**
      * День 5: Невролинк
-     * @param synapticChips количество чипов синаптического усиления
-     * @param neuroCoder количество нейрокодировщиков
+     *
+     * @param synapticChips   количество чипов синаптического усиления
+     * @param neuroCoder      количество нейрокодировщиков
      * @param corticalImplant количество кортикальных имплантов
-     * @param donate количество пополнений
+     * @param donate          количество пополнений
      * @return общее количество очков
      */
     public static int calculateDay5(int synapticChips, int neuroCoder, int corticalImplant, int donate) {
@@ -357,22 +366,23 @@ public class EvoCalculatorCore {
         validateNonNegative(corticalImplant, "corticalImplant");
         validateNonNegative(donate, "donate");
         int result = synapticChips * DAY5_SYNAPTIC_CHIP_POINTS + neuroCoder * DAY5_NEURO_CODER_POINTS +
-               corticalImplant * DAY5_CORTICAL_IMPLANT_POINTS + donate * DAY5_DONATE_POINTS;
+                corticalImplant * DAY5_CORTICAL_IMPLANT_POINTS + donate * DAY5_DONATE_POINTS;
         logCalculation("Day5", result, synapticChips, neuroCoder, corticalImplant, donate);
         return result;
     }
 
     /**
      * День 6: Оружие/Акс.
+     *
      * @param weaponTickets количество билетов розыгрыша оружия
-     * @param greenBoxes количество зелёных ящиков
-     * @param blueBoxes количество синих ящиков
-     * @param violetBoxes количество фиолетовых ящиков
-     * @param yellowBoxes количество жёлтых ящиков
-     * @param donate количество пополнений
+     * @param greenBoxes    количество зелёных ящиков
+     * @param blueBoxes     количество синих ящиков
+     * @param violetBoxes   количество фиолетовых ящиков
+     * @param yellowBoxes   количество жёлтых ящиков
+     * @param donate        количество пополнений
      * @return общее количество очков
      */
-    public static int calculateDay6(int weaponTickets, int greenBoxes, int blueBoxes, 
+    public static int calculateDay6(int weaponTickets, int greenBoxes, int blueBoxes,
                                     int violetBoxes, int yellowBoxes, int donate) {
         validateNonNegative(weaponTickets, "weaponTickets");
         validateNonNegative(greenBoxes, "greenBoxes");
@@ -381,14 +391,15 @@ public class EvoCalculatorCore {
         validateNonNegative(yellowBoxes, "yellowBoxes");
         validateNonNegative(donate, "donate");
         int result = weaponTickets * DAY6_WEAPON_TICKET_POINTS + greenBoxes * DAY6_GREEN_BOX_POINTS +
-               blueBoxes * DAY6_BLUE_BOX_POINTS + violetBoxes * DAY6_VIOLET_BOX_POINTS + 
-               yellowBoxes * DAY6_YELLOW_BOX_POINTS + donate * DAY6_DONATE_POINTS;
+                blueBoxes * DAY6_BLUE_BOX_POINTS + violetBoxes * DAY6_VIOLET_BOX_POINTS +
+                yellowBoxes * DAY6_YELLOW_BOX_POINTS + donate * DAY6_DONATE_POINTS;
         logCalculation("Day6", result, weaponTickets, greenBoxes, blueBoxes, violetBoxes, yellowBoxes, donate);
         return result;
     }
 
     /**
      * День 7: Пополнение
+     *
      * @param donate количество пополнений
      * @return общее количество очков
      */
@@ -467,7 +478,7 @@ public class EvoCalculatorCore {
 
     /**
      * День 1: Возвращает список скриншотов наград в зависимости от очков
-     * Логика порогов: 3000 → 9000 → 20000 → 36000 → 40000 → 69000 (top)
+     * Логика порогов: 3000 → 9000 → 20000 → 36000 → 40000 → 68000 (top)
      * top_revard показывается ТОЛЬКО при 69000+
      */
     public static List<Reward> getDay1Rewards(int points) {
@@ -476,7 +487,7 @@ public class EvoCalculatorCore {
 
     /**
      * День 2: Возвращает список скриншотов наград в зависимости от очков
-     * Логика порогов: 6000 → 15000 → 30000 → 48000 → 68000 → top
+     * Логика порогов: 300 → 1200 → 2400 → 6800 → 15000 → 30000 → 48000 → 68000 → top
      * top_revard показывается ТОЛЬКО при 68000+
      */
     public static List<Reward> getDay2Rewards(int points) {
@@ -485,7 +496,7 @@ public class EvoCalculatorCore {
 
     /**
      * День 3: Возвращает список скриншотов наград в зависимости от очков
-     * Логика порогов: 6000 → 17000 → 30000 → 45000 → 74000 → top
+     * Логика порогов: 300 → 1200 → 2400 → 6000 → 17000 → 30000 → 45000 → 74000 → top
      * top_revard показывается ТОЛЬКО при 74000+
      */
     public static List<Reward> getDay3Rewards(int points) {
@@ -494,7 +505,7 @@ public class EvoCalculatorCore {
 
     /**
      * День 4: Возвращает список скриншотов наград в зависимости от очков
-     * Логика порогов: 6000 → 15000 → 30000 → 56000 → 88000 → top
+     * Логика порогов: 300 → 1200 → 2400 → 6000 → 15000 → 30000 → 56000 → 88000 → top
      * top_revard показывается ТОЛЬКО при 88000+
      */
     public static List<Reward> getDay4Rewards(int points) {
@@ -549,7 +560,9 @@ public class EvoCalculatorCore {
                 || (config.topThreshold != null && points >= config.topThreshold);
 
         if (shouldShowTop && config.topScreenshotName != null) {
-            rewards.add(new Reward(config.basePath + config.topScreenshotName, Reward.RewardType.TOP));
+            rewards.add(new Reward(config.basePath + config.topScreenshotName,
+                    Reward.RewardType.TOP)
+            );
         }
 
         LOGGER.log(Level.FINE, "Rewards built for points={0}, count={1}, top={2}",

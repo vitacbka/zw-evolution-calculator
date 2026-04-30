@@ -515,14 +515,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Отображает список наград как ImageView в LinearLayout.
-     * С ограничением размера, чтобы изображения не были слишком большими.
-     */
-    /**
-     * Отображает список наград как ImageView в LinearLayout.
-     * Масштаб регулируется одной переменной IMAGE_SCALE_FACTOR.
-     */
-    /**
-     * Отображает список наград как ImageView в LinearLayout.
      * Размер контролируется через res/values/dimens.xml (в процентах).
      */
     private void displayRewardsInContainer(List<Reward> rewards) {
@@ -535,7 +527,7 @@ public class MainActivity extends AppCompatActivity {
 
         rewardsImagesContainer.setVisibility(View.VISIBLE);
 
-        // 🔥 Читаем настройки из dimens.xml
+        //  Читаем настройки из dimens.xml
         // Делим на 100.0f, чтобы получить коэффициент: 50 → 0.5
         final float SCALE_FACTOR = getResources().getInteger(R.integer.reward_image_scale_percent) / 100.0f;
 
