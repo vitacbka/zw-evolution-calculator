@@ -18,6 +18,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.evo.points.calculator.EvoCalculatorCore;
+import com.evo.points.calculator.days.Day2Equipments;
+import com.evo.points.calculator.days.Day3Camp;
 import com.evo.points.model.Reward;
 import com.evo.points.util.AssetBitmapLoader;
 import com.google.android.material.button.MaterialButton;
@@ -446,14 +448,14 @@ public class MainActivity extends AppCompatActivity {
                 EvoCalculatorCore::getDay1Rewards, false, -1, -1));
         configs.add(new DayUiConfig("День 2 (Экипировка)",
                 new String[]{"Билеты на экипировку", "Пополнения"},
-                values -> EvoCalculatorCore.calculateDay2(getValueByIndex(values, 0), getValueByIndex(values, 1)),
-                EvoCalculatorCore::getDay2Rewards, false, -1, -1));
+                values -> Day2Equipments.calculatePoints(getValueByIndex(values, 0), getValueByIndex(values, 1)),
+                Day2Equipments::getReward, false, -1, -1));
         configs.add(new DayUiConfig("День 3 (Лагерь)",
                 new String[]{"Сталь", "Энергия", "Ускорения", "Техноядро (бой)", "Техноядро (развитие)", "Пополнения"},
-                values -> EvoCalculatorCore.calculateDay3(getValueByIndex(values, 0), getValueByIndex(values, 1),
+                values -> Day3Camp.calculatePoints(getValueByIndex(values, 0), getValueByIndex(values, 1),
                         getValueByIndex(values, 2), getValueByIndex(values, 3), getValueByIndex(values, 4),
                         getValueByIndex(values, 5)),
-                EvoCalculatorCore::getDay3Rewards, false, -1, -1));
+                Day3Camp::getRewards, false, -1, -1));
         configs.add(new DayUiConfig("День 4 (Чертежи)",
                 new String[]{"Обычные модули", "Продвинутые модули", "Пополнения"},
                 values -> EvoCalculatorCore.calculateDay4(getValueByIndex(values, 0), getValueByIndex(values, 1),
