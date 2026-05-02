@@ -2,6 +2,8 @@ package com.evo.points.calculator.days;
 
 import com.evo.points.calculator.DayRewardConfig;
 import com.evo.points.calculator.RewardTier;
+import com.evo.points.calculator.utils.ScreenshotUtils;
+import com.evo.points.calculator.utils.ValidationUtils;
 import com.evo.points.model.Reward;
 
 import java.util.ArrayList;
@@ -19,34 +21,26 @@ public class Day5Neurolink {
     public static final int CORTICAL_IMPLANT_POINTS = 2000;
     public static final int DONATE_POINTS = 3;
     public static final int MIN_POINTS = 300;
+    private static final int MAX_POINTS = 72000;
 
     // ===== Пути к скриншотам наград для Дня 5 =====
     public static final String SCREENSHOT_BASE_PATH = "img/day_5/";
-    public static final String SCREENSHOT_300 = "300_reward.png";
-    public static final String SCREENSHOT_1200 = "10000_reward.png";
-    public static final String SCREENSHOT_2400 = "2400_reward.png";
-    public static final String SCREENSHOT_6000 = "6000_reward.png";
-    public static final String SCREENSHOT_10000 = "10000_reward.png";
-    public static final String SCREENSHOT_25000 = "25000_reward.png";
-    public static final String SCREENSHOT_48000 = "48000_reward.png";
-    public static final String SCREENSHOT_72000 = "72000_reward.png";
-    public static final String SCREENSHOT_TOP = "top_reward.png";
 
     // ===== Конфиг наград =====
     private static final DayRewardConfig REWARD_CONFIG = new DayRewardConfig(
             SCREENSHOT_BASE_PATH,
             Arrays.asList(
-                    new RewardTier(300, SCREENSHOT_300),
-                    new RewardTier(1200, SCREENSHOT_1200),
-                    new RewardTier(2400, SCREENSHOT_2400),
-                    new RewardTier(6000, SCREENSHOT_6000),
-                    new RewardTier(10000, SCREENSHOT_10000),
-                    new RewardTier(25000, SCREENSHOT_25000),
-                    new RewardTier(48000, SCREENSHOT_48000),
-                    new RewardTier(72000, SCREENSHOT_72000)
+                    new RewardTier(MIN_POINTS, ScreenshotUtils.getRewardScreenshot(MIN_POINTS)),
+                    new RewardTier(1200, ScreenshotUtils.getRewardScreenshot(1200)),
+                    new RewardTier(2400, ScreenshotUtils.getRewardScreenshot(2400)),
+                    new RewardTier(6000, ScreenshotUtils.getRewardScreenshot(6000)),
+                    new RewardTier(10000, ScreenshotUtils.getRewardScreenshot(10000)),
+                    new RewardTier(25000, ScreenshotUtils.getRewardScreenshot(25000)),
+                    new RewardTier(48000, ScreenshotUtils.getRewardScreenshot(48000)),
+                    new RewardTier(MAX_POINTS, ScreenshotUtils.getRewardScreenshot(MAX_POINTS))
             ),
-            72000,
-            SCREENSHOT_TOP,
+            MAX_POINTS,
+            ScreenshotUtils.TOP_REWARD,
             true
     );
 
@@ -60,10 +54,10 @@ public class Day5Neurolink {
      * @return общее количество очков
      */
     public static int calculatePoints(int synapticChips, int neuroCoder, int corticalImplant, int donate) {
-        validateNonNegative(synapticChips, "synapticChips");
-        validateNonNegative(neuroCoder, "neuroCoder");
-        validateNonNegative(corticalImplant, "corticalImplant");
-        validateNonNegative(donate, "donate");
+        ValidationUtils.validateNonNegative(synapticChips, "synapticChips");
+        ValidationUtils.validateNonNegative(neuroCoder, "neuroCoder");
+        ValidationUtils.validateNonNegative(corticalImplant, "corticalImplant");
+        ValidationUtils.validateNonNegative(donate, "donate");
 
         int result = synapticChips * SYNAPTIC_CHIP_POINTS
                 + neuroCoder * NEURO_CODER_POINTS
@@ -83,7 +77,10 @@ public class Day5Neurolink {
      * @return true, если есть хотя бы одна награда
      */
     public static boolean hasReward(int points) {
-        return points >= MIN_POINTS;
+        boolean result = points >= MIN_POINTS;
+        LOGGER.log(Level.FINE, "Day5 hasReward: points={0}, result={1}",
+                new Object[] { points,result });
+        return result;
     }
 
     /**
@@ -117,11 +114,5 @@ public class Day5Neurolink {
                 new Object[]{points, rewards.size(), shouldShowTop});
 
         return rewards;
-    }
-
-    private static void validateNonNegative(int value, String paramName) {
-        if (value < 0) {
-            throw new IllegalArgumentException(paramName + " cannot be negative: " + value);
-        }
     }
 }

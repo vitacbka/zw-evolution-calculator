@@ -449,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
         configs.add(new DayUiConfig("День 2 (Экипировка)",
                 new String[]{"Билеты на экипировку", "Пополнения"},
                 values -> Day2Equipments.calculatePoints(getValueByIndex(values, 0), getValueByIndex(values, 1)),
-                Day2Equipments::getReward, false, -1, -1));
+                Day2Equipments::getRewards, false, -1, -1));
         configs.add(new DayUiConfig("День 3 (Лагерь)",
                 new String[]{"Сталь", "Энергия", "Ускорения", "Техноядро (бой)", "Техноядро (развитие)", "Пополнения"},
                 values -> Day3Camp.calculatePoints(getValueByIndex(values, 0), getValueByIndex(values, 1),

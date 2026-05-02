@@ -2,6 +2,8 @@ package com.evo.points.calculator.days;
 
 import com.evo.points.calculator.DayRewardConfig;
 import com.evo.points.calculator.RewardTier;
+import com.evo.points.calculator.utils.ScreenshotUtils;
+import com.evo.points.calculator.utils.ValidationUtils;
 import com.evo.points.model.Reward;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,33 +17,25 @@ public class Day1AlbumCards {
     // Константы
     public static final int EVO_CARD_POINTS = 50;
     public static final int MIN_POINTS = 300;
+    private static final int MAX_POINTS = 68000;
 
     public static final String SCREENSHOT_BASE_PATH = "img/day_1/";
-    public static final String SCREENSHOT_300 = "300_reward.png";
-    public static final String SCREENSHOT_1200 = "1200_reward.png";
-    public static final String SCREENSHOT_3000 = "3000_reward.png";
-    public static final String SCREENSHOT_6000 = "6000_reward.png";
-    public static final String SCREENSHOT_15000 = "15000_reward.png";
-    public static final String SCREENSHOT_30000 = "30000_reward.png";
-    public static final String SCREENSHOT_40000 = "40000_reward.png";
-    public static final String SCREENSHOT_68000 = "68000_reward.png";
-    public static final String SCREENSHOT_TOP = "top_reward.png";
 
     // Конфиг наград
     private static final DayRewardConfig REWARD_CONFIG = new DayRewardConfig(
             SCREENSHOT_BASE_PATH,
             Arrays.asList(
-                    new RewardTier(300, SCREENSHOT_300),
-                    new RewardTier(1200, SCREENSHOT_1200),
-                    new RewardTier(3000, SCREENSHOT_3000),
-                    new RewardTier(6000, SCREENSHOT_6000),
-                    new RewardTier(15000, SCREENSHOT_15000),
-                    new RewardTier(30000, SCREENSHOT_30000),
-                    new RewardTier(40000, SCREENSHOT_40000),
-                    new RewardTier(68000, SCREENSHOT_68000)
+                    new RewardTier(MIN_POINTS, ScreenshotUtils.getRewardScreenshot(MIN_POINTS)),
+                    new RewardTier(1200, ScreenshotUtils.getRewardScreenshot(1200)),
+                    new RewardTier(3000, ScreenshotUtils.getRewardScreenshot(3000)),
+                    new RewardTier(6000, ScreenshotUtils.getRewardScreenshot(6000)),
+                    new RewardTier(15000, ScreenshotUtils.getRewardScreenshot(15000)),
+                    new RewardTier(30000, ScreenshotUtils.getRewardScreenshot(30000)),
+                    new RewardTier(40000, ScreenshotUtils.getRewardScreenshot(40000)),
+                    new RewardTier(MAX_POINTS, ScreenshotUtils.getRewardScreenshot(MAX_POINTS))
             ),
-            68000,
-            SCREENSHOT_TOP,
+            MAX_POINTS,
+            ScreenshotUtils.TOP_REWARD,
             true   // сохраняем текущее поведение: топ всегда показывается
     );
 
@@ -52,9 +46,7 @@ public class Day1AlbumCards {
      * @return общее количество очков
      */
     public static int calculatePoints(int cards) {
-        if (cards < 0) {
-            throw new IllegalArgumentException("cards cannot be negative: " + cards);
-        }
+        ValidationUtils.validateNonNegative(cards, "cards");
         int result = cards * EVO_CARD_POINTS;
         LOGGER.log(Level.FINE, "Day1 calculated: cards={0}, points={1}", new Object[]{cards, result});
         return result;
@@ -62,7 +54,10 @@ public class Day1AlbumCards {
 
     // Проверка, есть ли награда (минимальный порог)
     public static boolean hasReward(int points) {
-        return points >= MIN_POINTS;
+        boolean result = points >= MIN_POINTS;
+        LOGGER.log(Level.FINE, "Day 1 hasReward: point={0}, result={1}",
+                new Object[]{points, result});
+        return result;
     }
 
     // Получение списка наград

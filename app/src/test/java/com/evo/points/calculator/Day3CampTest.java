@@ -12,13 +12,14 @@ public class Day3CampTest {
     void calculatePoints_validInputs() {
         assertAll("Расчёт очков Дня 3 (Лагерь)",
                 () -> assertEquals(0, Day3Camp.calculatePoints(0, 0, 0, 0, 0, 0)),
-                () -> assertEquals(1, Day3Camp.calculatePoints(200, 0, 0, 0, 0, 0)), // steel/200
-                () -> assertEquals(1, Day3Camp.calculatePoints(0, 200, 0, 0, 0, 0)), // energy/200
-                () -> assertEquals(1, Day3Camp.calculatePoints(0, 0, 1, 0, 0, 0)), // boost
-                () -> assertEquals(500, Day3Camp.calculatePoints(0, 0, 0, 1, 0, 0)), // battleCore
-                () -> assertEquals(500, Day3Camp.calculatePoints(0, 0, 0, 0, 1, 0)), // devCore
-                () -> assertEquals(3, Day3Camp.calculatePoints(0, 0, 0, 0, 0, 1)), // donate
-                () -> assertEquals(1003, Day3Camp.calculatePoints(200, 200, 1, 1, 1, 1))
+                () -> assertEquals(1, Day3Camp.calculatePoints(200, 0, 0, 0, 0, 0)), // steel/200 = 1
+                () -> assertEquals(1, Day3Camp.calculatePoints(0, 200, 0, 0, 0, 0)), // energy/200 = 1
+                () -> assertEquals(1, Day3Camp.calculatePoints(0, 0, 1, 0, 0, 0)), // boost = 1
+                () -> assertEquals(500, Day3Camp.calculatePoints(0, 0, 0, 1, 0, 0)), // battleCore = 500
+                () -> assertEquals(500, Day3Camp.calculatePoints(0, 0, 0, 0, 1, 0)), // devCore = 500
+                () -> assertEquals(3, Day3Camp.calculatePoints(0, 0, 0, 0, 0, 1)), // donate = 3
+                // 200/200 + 200/200 + 1 + 500 + 500 + 3 = 1 + 1 + 1 + 500 + 500 + 3 = 1006
+                () -> assertEquals(1006, Day3Camp.calculatePoints(200, 200, 1, 1, 1, 1))
         );
     }
 

@@ -2,6 +2,8 @@ package com.evo.points.calculator.days;
 
 import com.evo.points.calculator.DayRewardConfig;
 import com.evo.points.calculator.RewardTier;
+import com.evo.points.calculator.utils.ScreenshotUtils;
+import com.evo.points.calculator.utils.ValidationUtils;
 import com.evo.points.model.Reward;
 
 import java.util.ArrayList;
@@ -21,34 +23,31 @@ public class Day6Weapon {
     public static final int YELLOW_BOX_POINTS = 2500;
     public static final int DONATE_POINTS = 3;
     public static final int MIN_POINTS = 7500;
+    private static final int MAX_POINTS = 115000;
 
     // ===== Вероятности получения сундуков =====
-    public static final double BLUE_FROM_GREEN_CHANCE = 0.05;  // 5%
+    public static final double BLUE_FROM_GREEN_CHANCE = 0.05; // 5%
     public static final double VIOLET_FROM_BLUE_CHANCE = 0.04; // 4%
 
     // ===== Пути к скриншотам наград для Дня 6 =====
-    public static final String SCREENSHOT_BASE_PATH = "img/day_6";
-    public static final String SCREENSHOT_7500 = "7500_revard.png";
-    public static final String SCREENSHOT_20000 = "20000_revard.png";
-    public static final String SCREENSHOT_45000 = "45000_revard.png";
-    public static final String SCREENSHOT_75000 = "75000_revard.png";
-    public static final String SCREENSHOT_115000 = "115000_revard.png";
-    public static final String SCREENSHOT_TOP = "top_revard.png";
+    public static final String SCREENSHOT_BASE_PATH = "img/day_6/";
 
     // ===== Конфиг наград =====
     private static final DayRewardConfig REWARD_CONFIG = new DayRewardConfig(
             SCREENSHOT_BASE_PATH,
             Arrays.asList(
-                    new RewardTier(7500, SCREENSHOT_7500),
-                    new RewardTier(20000, SCREENSHOT_20000),
-                    new RewardTier(45000, SCREENSHOT_45000),
-                    new RewardTier(75000, SCREENSHOT_75000),
-                    new RewardTier(115000, SCREENSHOT_115000)
-            ),
-            115000,
-            SCREENSHOT_TOP,
-            true
-    );
+                    new RewardTier(MIN_POINTS, ScreenshotUtils.getRewardScreenshot(MIN_POINTS)),
+                    new RewardTier(1200, ScreenshotUtils.getRewardScreenshot(1200)),
+                    new RewardTier(2400, ScreenshotUtils.getRewardScreenshot(2400)),
+                    new RewardTier(6000, ScreenshotUtils.getRewardScreenshot(6000)),
+                    new RewardTier(15000, ScreenshotUtils.getRewardScreenshot(15000)),
+                    new RewardTier(25000, ScreenshotUtils.getRewardScreenshot(25000)),
+                    new RewardTier(45000, ScreenshotUtils.getRewardScreenshot(45000)),
+                    new RewardTier(75000, ScreenshotUtils.getRewardScreenshot(75000)),
+                    new RewardTier(MAX_POINTS, ScreenshotUtils.getRewardScreenshot(MAX_POINTS))),
+            MAX_POINTS,
+            ScreenshotUtils.TOP_REWARD,
+            true);
 
     /**
      * День 6: Оружие/Акс.
@@ -62,13 +61,13 @@ public class Day6Weapon {
      * @return общее количество очков
      */
     public static int calculatePoints(int weaponTickets, int greenBoxes, int blueBoxes,
-                                      int violetBoxes, int yellowBoxes, int donate) {
-        validateNonNegative(weaponTickets, "weaponTickets");
-        validateNonNegative(greenBoxes, "greenBoxes");
-        validateNonNegative(blueBoxes, "blueBoxes");
-        validateNonNegative(violetBoxes, "violetBoxes");
-        validateNonNegative(yellowBoxes, "yellowBoxes");
-        validateNonNegative(donate, "donate");
+            int violetBoxes, int yellowBoxes, int donate) {
+        ValidationUtils.validateNonNegative(weaponTickets, "weaponTickets");
+        ValidationUtils.validateNonNegative(greenBoxes, "greenBoxes");
+        ValidationUtils.validateNonNegative(blueBoxes, "blueBoxes");
+        ValidationUtils.validateNonNegative(violetBoxes, "violetBoxes");
+        ValidationUtils.validateNonNegative(yellowBoxes, "yellowBoxes");
+        ValidationUtils.validateNonNegative(donate, "donate");
 
         int result = weaponTickets * WEAPON_TICKET_POINTS
                 + greenBoxes * GREEN_BOX_POINTS
@@ -78,8 +77,8 @@ public class Day6Weapon {
                 + donate * DONATE_POINTS;
 
         LOGGER.log(Level.FINE, "Day6 calculated: weaponTickets={0}, greenBoxes={1}, blueBoxes={2}, " +
-                        "violetBoxes={3}, yellowBoxes={4}, donate={5}, points={6}",
-                new Object[]{weaponTickets, greenBoxes, blueBoxes, violetBoxes, yellowBoxes, donate, result});
+                "violetBoxes={3}, yellowBoxes={4}, donate={5}, points={6}",
+                new Object[] { weaponTickets, greenBoxes, blueBoxes, violetBoxes, yellowBoxes, donate, result });
         return result;
     }
 
@@ -90,6 +89,9 @@ public class Day6Weapon {
      * @return true, если есть хотя бы одна награда
      */
     public static boolean hasReward(int points) {
+        boolean result = points >= MIN_POINTS;
+        LOGGER.log(Level.FINE, "Day6 hasReward: points={0}, result={1}",
+                new Object[]{points,result});
         return points >= MIN_POINTS;
     }
 
@@ -109,7 +111,7 @@ public class Day6Weapon {
      * Расчёт ожидаемого количества синих сундуков из зелёных (5% шанс)
      */
     public static int getExpectedBlueFromGreen(int greenBoxes) {
-        validateNonNegative(greenBoxes, "greenBoxes");
+        ValidationUtils.validateNonNegative(greenBoxes, "greenBoxes");
         return (int) Math.round(greenBoxes * BLUE_FROM_GREEN_CHANCE);
     }
 
@@ -117,7 +119,7 @@ public class Day6Weapon {
      * Расчёт ожидаемого количества фиолетовых сундуков из синих (4% шанс)
      */
     public static int getExpectedVioletFromBlue(int blueBoxes) {
-        validateNonNegative(blueBoxes, "blueBoxes");
+        ValidationUtils.validateNonNegative(blueBoxes, "blueBoxes");
         return (int) Math.round(blueBoxes * VIOLET_FROM_BLUE_CHANCE);
     }
 
@@ -161,14 +163,8 @@ public class Day6Weapon {
         }
 
         LOGGER.log(Level.FINE, "Day6 rewards built for points={0}, count={1}, top={2}",
-                new Object[]{points, rewards.size(), shouldShowTop});
+                new Object[] { points, rewards.size(), shouldShowTop });
 
         return rewards;
-    }
-
-    private static void validateNonNegative(int value, String paramName) {
-        if (value < 0) {
-            throw new IllegalArgumentException(paramName + " cannot be negative: " + value);
-        }
     }
 }

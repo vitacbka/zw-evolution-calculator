@@ -2,6 +2,8 @@ package com.evo.points.calculator.days;
 
 import com.evo.points.calculator.DayRewardConfig;
 import com.evo.points.calculator.RewardTier;
+import com.evo.points.calculator.utils.ScreenshotUtils;
+import com.evo.points.calculator.utils.ValidationUtils;
 import com.evo.points.model.Reward;
 
 import java.util.ArrayList;
@@ -20,39 +22,32 @@ public class Day4Blueprint {
     public static final int DONATE_POINTS = 3;
     public static final int MIN_POINTS = 300;
 
+    private static final int MAX_POINTS = 88000;
+
     // Пути к скриншотам наград для Дня 4
     public static final String SCREENSHOT_BASE_PATH = "img/day_4/";
-    public static final String SCREENSHOT_300 = "300_reward.png";
-    public static final String SCREENSHOT_1200 = "1200_reward.png";
-    public static final String SCREENSHOT_2400 = "2400_reward.png";
-    public static final String SCREENSHOT_6000 = "6000_reward.png";
-    public static final String SCREENSHOT_15000 = "15000_reward.png";
-    public static final String SCREENSHOT_30000 = "30000_reward.png";
-    public static final String SCREENSHOT_56000 = "56000_reward.png";
-    public static final String SCREENSHOT_88000 = "88000_reward.png";
-    public static final String SCREENSHOT_TOP = "top_reward.png";
 
     private static final DayRewardConfig REWARD_CONFIG = new DayRewardConfig(
             SCREENSHOT_BASE_PATH,
             Arrays.asList(
-                    new RewardTier(300, SCREENSHOT_300),
-                    new RewardTier(1200, SCREENSHOT_1200),
-                    new RewardTier(2400, SCREENSHOT_2400),
-                    new RewardTier(6000, SCREENSHOT_6000),
-                    new RewardTier(15000, SCREENSHOT_15000),
-                    new RewardTier(30000, SCREENSHOT_30000),
-                    new RewardTier(56000, SCREENSHOT_56000),
-                    new RewardTier(88000, SCREENSHOT_88000)
+                    new RewardTier(MIN_POINTS, ScreenshotUtils.getRewardScreenshot(MIN_POINTS)),
+                    new RewardTier(1200, ScreenshotUtils.getRewardScreenshot(1200)),
+                    new RewardTier(2400, ScreenshotUtils.getRewardScreenshot(2400)),
+                    new RewardTier(6000, ScreenshotUtils.getRewardScreenshot(6000)),
+                    new RewardTier(15000, ScreenshotUtils.getRewardScreenshot(15000)),
+                    new RewardTier(30000, ScreenshotUtils.getRewardScreenshot(30000)),
+                    new RewardTier(56000, ScreenshotUtils.getRewardScreenshot(56000)),
+                    new RewardTier(MAX_POINTS, ScreenshotUtils.getRewardScreenshot(MAX_POINTS))
             ),
-            88000,
-            SCREENSHOT_TOP,
+            MAX_POINTS,
+            ScreenshotUtils.TOP_REWARD,
             true
     );
 
     public static int calculatePoints(int commonModules, int advancedModules, int donate) {
-        validateNonNegative(commonModules, "commonModules");
-        validateNonNegative(advancedModules, "advancedModules");
-        validateNonNegative(donate, "donate");
+        ValidationUtils.validateNonNegative(commonModules, "commonModules");
+        ValidationUtils.validateNonNegative(advancedModules, "advancedModules");
+        ValidationUtils.validateNonNegative(donate, "donate");
         int result = commonModules * COMMON_POINTS + advancedModules * ADVANCED_POINTS
                 + donate * DONATE_POINTS;
         LOGGER.log(Level.FINE, "Day4 calculated: points={0}", result);
@@ -60,7 +55,10 @@ public class Day4Blueprint {
     }
 
     public static boolean hasReward(int points) {
-        return points >= MIN_POINTS;
+        boolean result = points >= MIN_POINTS;
+        LOGGER.log(Level.FINE, "Day3 hasReward: points={0}, result={1}",
+                new Object[]{points, result});
+        return result;
     }
 
     public static List<Reward> getRewards(int points) {
@@ -83,11 +81,5 @@ public class Day4Blueprint {
         LOGGER.log(Level.FINE, "Day4 rewards built for points={0}, count={1}, top={2}",
                 new Object[]{points, rewards.size(), shouldShowTop});
         return rewards;
-    }
-
-    private static void validateNonNegative(int value, String paramName) {
-        if (value < 0) {
-            throw new IllegalArgumentException(paramName + " cannot be negative: " + value);
-        }
     }
 }

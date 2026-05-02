@@ -43,7 +43,7 @@ public class EvoCalculatorCore {
     }
 
     public static List<Reward> getDay2Rewards(int points) {
-        return Day2Equipments.getReward(points);
+        return Day2Equipments.getRewards(points);
     }
 
     // ==================== ДЕНЬ 3: Лагерь ====================
@@ -135,6 +135,10 @@ public class EvoCalculatorCore {
     // ==================== ДЕНЬ 7: Пополнение ====================
     public static int calculateDay7(int donate) {
         return Day7Topup.calculatePoints(donate);
+    }
+
+    public static boolean hasDay7Reward(int points) {
+        return Day7Topup.hasReward(points);
     }
 
     public static List<Reward> getDay7Rewards(int points) {
