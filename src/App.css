@@ -60,6 +60,85 @@ header h1 {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
+.install-btn {
+  position: absolute;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--accent-color);
+  color: var(--yellow);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.install-btn:hover {
+  transform: scale(1.1);
+  background: var(--accent-color);
+  color: var(--white);
+}
+
+/* iOS Prompt Styles */
+.ios-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.ios-prompt {
+  background: var(--bg-secondary);
+  padding: 30px;
+  border-radius: var(--border-radius);
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  border: 1px solid var(--accent-color);
+  box-shadow: var(--shadow);
+}
+
+.ios-prompt h3 {
+  color: var(--yellow);
+  margin-bottom: 15px;
+}
+
+.ios-prompt p {
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+}
+
+.ios-prompt ol {
+  padding-left: 20px;
+  text-align: left;
+}
+
+.ios-prompt li {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.close-prompt {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
 .card {
   background: var(--bg-secondary);
   padding: 24px;

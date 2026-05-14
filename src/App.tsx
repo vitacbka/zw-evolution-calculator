@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DAYS } from './logic/calculator';
 import type { Reward } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Heart, Info, RotateCcw, CreditCard, Wallet } from 'lucide-react';
+import { ChevronDown, Heart, Info, RotateCcw, CreditCard, Wallet, Download, X } from 'lucide-react';
 import './App.css';
 
 const App: React.FC = () => {
@@ -11,6 +11,41 @@ const App: React.FC = () => {
   const [points, setPoints] = useState(0);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [isTopRewardOpen, setIsTopRewardOpen] = useState(false);
+  
+  // PWA Logic
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    });
+
+    // Check if it's iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isIOS && !isStandalone) {
+      setIsInstallable(true);
+    }
+  }, []);
+
+  const handleInstallClick = async () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    
+    if (isIOS) {
+      setShowIOSPrompt(true);
+    } else if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setIsInstallable(false);
+      }
+    }
+  };
 
   const selectedDay = DAYS[selectedDayIndex];
 
@@ -22,7 +57,6 @@ const App: React.FC = () => {
   }, [selectedDayIndex, inputs, selectedDay]);
 
   const handleInputChange = (index: number, value: string) => {
-    // Удаляем все нецифровые символы (буквы, минусы, точки)
     const cleanValue = value.replace(/\D/g, '');
     const numValue = parseInt(cleanValue) || 0;
     
@@ -48,9 +82,48 @@ const App: React.FC = () => {
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}
       >
-        <h1 style={{ fontSize: '1.8rem' }}>ZW Evolution calculator 🧟</h1>
+        <h1 style={{ fontSize: '1.6rem', margin: '20px 0' }}>ZW Evolution calculator 🧟</h1>
+        {isInstallable && (
+          <button 
+            onClick={handleInstallClick}
+            className="install-btn"
+            title="Установить приложение"
+          >
+            <Download size={20} />
+          </button>
+        )}
       </motion.header>
+
+      <AnimatePresence>
+        {showIOSPrompt && (
+          <motion.div 
+            className="ios-prompt-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowIOSPrompt(false)}
+          >
+            <motion.div 
+              className="ios-prompt"
+              initial={{ scale: 0.8, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="close-prompt" onClick={() => setShowIOSPrompt(false)}>
+                <X size={20} />
+              </button>
+              <h3>Установка на iOS</h3>
+              <p>Чтобы установить калькулятор на рабочий стол:</p>
+              <ol>
+                <li>Нажмите кнопку <strong>«Поделиться»</strong> (иконка квадрата со стрелкой вверх внизу экрана).</li>
+                <li>Прокрутите список и выберите <strong>«На экран Домой»</strong>.</li>
+              </ol>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main>
         <motion.div 

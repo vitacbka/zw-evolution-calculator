@@ -1,0 +1,17 @@
+{
+  "name": "ZW Evolution Calculator",
+  "short_name": "ZW Evo",
+  "description": "Calculator for Zombie Waves evolution events",
+  "start_url": "/zw-evolution-calculator/",
+  "display": "standalone",
+  "background_color": "#16161D",
+  "theme_color": "#E6C384",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
