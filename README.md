@@ -1,173 +1,73 @@
-# Evo Points Calculator
+# React + TypeScript + Vite
 
-Android-приложение для расчёта очков и наград в событии «Эволюция» (Evo Points) в мобильной игре.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Описание
+Currently, two official plugins are available:
 
-Приложение помогает игрокам рассчитать количество очков эволюции и соответствующие награды для каждого из 7 дней события:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-| День | Тема | Входные параметры |
-|------|------|-------------------|
-| 1 | Карты эволюции | Карты эволюции |
-| 2 | Экипировка | Билеты на экипировку, пополнения |
-| 3 | Лагерь | Сталь, энергия, ускорения, техноядра (бой/развитие), пополнения |
-| 4 | Чертежи | Обычные/продвинутые модули, пополнения |
-| 5 | Невролинк | Чипы, нейрокодировщики, кортикальные импланты, пополнения |
-| 6 | Оружие/Аксессуары | Билеты розыгрыша, ящики (зелёные/синие/фиолетовые/жёлтые), пополнения |
-| 7 | Пополнение | Пополнения (×6 очков) |
+## React Compiler
 
-### Особенности
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-- 📊 **Расчёт очков** для каждого дня события
-- 🎁 **Награды** — показывает доступные награды в зависимости от набранных очков
-- 🗑️ **Очистка полей** — кнопка «Очистить все» для сброса всех введённых значений с подтверждением
-- 🎲 **Вероятности** для Дня 6 — расчёт ожидаемого количества сундуков из зелёных (5%) и синих (4%)
-- 🎨 **Тема Kanagawa** — приятный визуальный стиль
-- ✅ **Unit-тесты** — полное покрытие бизнес-логики (JUnit + Mockito)
+## Expanding the ESLint configuration
 
-## Технические характеристики
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-- **Минимальная версия Android:** API 24 (Android 7.0)
-- **Целевая версия:** API 34 (Android 14)
-- **Язык:** Java 17
-- **UI:** Material Design 3
-- **Сборка:** Gradle 8.4.0
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-## Структура проекта
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-```
-android-app/
-├── app/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/evo/points/
-│   │   │   │   ├── MainActivity.java          # UI и логика отображения
-│   │   │   │   └── calculator/
-│   │   │   │       └── EvoCalculatorCore.java # Бизнес-логика расчётов
-│   │   │   ├── res/                           # Ресурсы (layout, цвета, строки)
-│   │   │   └── AndroidManifest.xml
-│   │   └── test/
-│   │   └── java/com/evo/points/calculator/
-│   │       ├── Day1Test.java
-│   │       ├── Day2Test.java
-│   │       ├── Day3Test.java
-│   │       ├── Day4Test.java
-│   │       ├── Day5Test.java
-│   │       ├── Day6Test.java
-│   │       └── Day7Test.java
-│   └── build.gradle
-├── gradle/
-├── build.gradle
-├── settings.gradle
-└── key.properties
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-## Сборка и запуск
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-### Что должно быть установлено
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-Для сборки из командной строки или из Android Studio нужно следующее:
-
-| Компонент | Версия / примечание |
-|-----------|---------------------|
-| **JDK** | **17** (в `app/build.gradle` указаны `sourceCompatibility` / `targetCompatibility` для Java 17) |
-| **Android SDK** | **API 34** (`compileSdk` / `targetSdk`) и **Build-Tools**, соответствующие используемому Android Gradle Plugin |
-| **Android Gradle Plugin** | Задаётся в корневом `build.gradle` (classpath `com.android.tools.build:gradle`) |
-| **Gradle** | Подходит **Gradle Wrapper** из репозитория (`./gradlew`) или установленный системой **Gradle**, совместимый с плагином |
-
-Практичный вариант: установить **Android Studio** (последняя стабильная ветка), в ней через SDK Manager поставить **Android 14 (API 34)** и инструменты сборки — Studio подтянет нужный Gradle при открытии проекта.
-
-**Замечание:** если при сборке Gradle не может создать каталог `~/.android` (например, в CI или ограниченном окружении), задайте локальный каталог:
-
-```bash
-export ANDROID_USER_HOME="$PWD/.android"
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-(выполняйте из **корня репозитория**, чтобы служебные файлы лежали внутри проекта).
-
----
-
-### BUILD APK — команды сборки
-
-Рабочий каталог — **корень репозитория** (где лежат `settings.gradle`, `gradlew`).
-
-**Релизный APK** (имя файла задано в `app/build.gradle`: **`EvoCalk_final.apk`**):
-
-```bash
-cd /path/to/zombie_waves_evo_calculator
-
-# Вариант A: Gradle Wrapper (рекомендуется)
-export ANDROID_USER_HOME="${ANDROID_USER_HOME:-$PWD/.android}"
-./gradlew :app:assembleRelease
-
-# Вариант B: системный Gradle (если установлен отдельно)
-export ANDROID_USER_HOME="${ANDROID_USER_HOME:-$PWD/.android}"
-gradle :app:assembleRelease
-```
-
-Готовый файл:
-
-```text
-app/build/outputs/apk/release/EvoCalk_final.apk
-```
-
-**Отладочный APK** (подпись debug по умолчанию):
-
-```bash
-export ANDROID_USER_HOME="${ANDROID_USER_HOME:-$PWD/.android}"
-./gradlew :app:assembleDebug
-```
-
-Обычно артефакт:
-
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
-
-**Unit-тесты:**
-
-```bash
-./gradlew :app:test
-```
-
----
-
-### Подпись релизной сборки
-
-В модуле `app` настроено следующее:
-
-- Если в каталоге `app/` есть файл **`evo-points-key.jks`**, релиз подписывается этим keystore.
-- Если файла **нет**, релиз собирается с **debug-signing** (удобно для локальной проверки; для публикации в магазине нужен свой keystore).
-
-Отдельный файл `key.properties` в текущей конфигурации проекта для сборки **не обязателен**; при необходимости вы можете вынести пароли и пути в свой механизм (например, переменные окружения или `keystore.properties`), не коммитя секреты в репозиторий.
-
-## Тестирование
-
-Проект включает полное покрытие unit-тестами для `EvoCalculatorCore`:
-
-- ✅ Расчёт очков для всех 7 дней
-- ✅ Проверка порогов наград
-- ✅ Расчёт вероятностей для Дня 6
-- ✅ Валидация входных данных (отрицательные значения)
-
-Запуск тестов:
-
-```bash
-./gradlew :app:test
-```
-
-## Формулы расчёта
-
-| День | Формула |
-|------|---------|
-| 1 | `карты эволюции × 50` |
-| 2 | `билеты × 300 + пополнения × 3` |
-| 3 | `сталь/200 + энергия/200 + ускорения/2 + техноядро(бой)×500 + техноядро(развитие)×500 + пополнения × 3` |
-| 4 | `обычные×30 + продвинутые×810 + пополнения × 3` |
-| 5 | `чипы×5 + кодировщики×10 + импланты×2000 + пополнения × 3` |
-| 6 | `билеты×120 + зелёные×10 + синие×30 + фиолетовые×250 + жёлтые×2500 + пополнения × 3` |
-| 7 | `пополнения × 6` |
-
-## Лицензия
-
-Все права защищены.
